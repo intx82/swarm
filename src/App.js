@@ -36,15 +36,15 @@ class App extends React.Component {
   }
 
   onError = () => {
-      this.setState((state) => {
-        state.msg = {
-          type : MessageBarType.error,
-          text: "Ошибка подключения"
-        }
+    this.setState((state) => {
+      state.msg = {
+        type: MessageBarType.error,
+        text: "Ошибка подключения"
+      }
 
-        setTimeout(()=>this.setState({msg: null}), 2500)
-        return state
-      })
+      setTimeout(() => this.setState({ msg: null }), 2500)
+      return state
+    })
   }
 
 
@@ -52,11 +52,11 @@ class App extends React.Component {
 
     this.setState((state) => {
       state.msg = {
-        type : MessageBarType.success,
+        type: MessageBarType.success,
         text: "Подключение успешно"
       }
 
-      setTimeout(()=>this.setState({msg: null}), 2500)
+      setTimeout(() => this.setState({ msg: null }), 2500)
       return state
     })
 
@@ -67,10 +67,35 @@ class App extends React.Component {
     let devs = this.state.devices
     for (const idx in devs) {
       if ((devs[idx].lastMsgTime + 60000) < Date.now()) {
-        devs[idx].alive = <Icon iconName="StatusCircleErrorX" style={{ color: "#a4373a" }} />
+        this.setDevStatusIcon(devs[idx], "StatusCircleErrorX")
       }
     }
     this.setState({ devices: devs })
+  }
+
+  setDevStatusIcon = (dev, iconName) => {
+    let color = "#333333"
+    const iconColors = {
+      "Warning": "#ffaa44",
+      "StatusCircleCheckmark": "#31752f",
+      "StatusCircleErrorX": "#a4373a"
+    }
+
+    if (iconName in iconColors) {
+      color = iconColors[iconName]
+    }
+
+    dev.alive = <Icon iconName={iconName} style={{ color: color, fontSize: "20px" }} />
+  }
+
+  updateDevLastMsgTime = (dev) => {
+    if ((dev.lastMsgTime + 60000) < Date.now()) {
+      console.log(dev, "restored")
+      this.setDevStatusIcon(dev, "Warning")
+    } else {
+      this.setDevStatusIcon(dev, "StatusCircleCheckmark")
+    }
+    dev.lastMsgTime = Date.now()
   }
 
   onMessage = (topic, message) => {
@@ -81,17 +106,18 @@ class App extends React.Component {
       let [, hub, dev] = topic.toString().match(re).toString().split('/', 3)
       let devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx === -1) {
-        devs.push({
-          alive: <Icon iconName="StatusCircleCheckmark" style={{ color: "#31752f" }} />,
+        devIdx = devs.push({
           hub: hub,
           dev: dev,
           regTime: " - ",
           status: 0,
+          lqi: 0,
           lastMsgTime: Date.now()
-        })
+        }) - 1;
+        this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
       } else {
         devs[devIdx].dev = dev
-        devs[devIdx].lastMsgTime = Date.now()
+        this.updateDevLastMsgTime(devs[devIdx])
       }
 
       this.setState({ devices: devs })
@@ -103,7 +129,18 @@ class App extends React.Component {
       let devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx !== -1) {
         devs[devIdx].status = Number(message.toString())
-        devs[devIdx].lastMsgTime = Date.now()
+        this.updateDevLastMsgTime(devs[devIdx])
+        this.setState({ devices: devs })
+      }
+    }
+
+    re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/lqi')
+    if (re.test(topic.toString())) {
+      let [, hub] = topic.toString().toString().split('/', 2)
+      let devIdx = devs.findIndex((itm) => itm.hub === hub)
+      if (devIdx !== -1) {
+        devs[devIdx].lqi = Number(message.toString())
+        this.updateDevLastMsgTime(devs[devIdx])
         this.setState({ devices: devs })
       }
     }
@@ -113,18 +150,20 @@ class App extends React.Component {
       let [, hub] = topic.toString().toString().split('/', 2)
       let devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx === -1) {
-        devs.push({
-          alive: <Icon iconName="StatusCircleCheckmark" style={{ color: "#31752f" }} />,
+        devIdx = devs.push({
           hub: hub,
           dev: ' - ',
           regTime: Date.now(),
           status: 0,
+          lqi: 0,
           lastMsgTime: Date.now()
         })
+        this.setDevStatusIcon(devs[devIdx-1], "StatusCircleCheckmark")
       } else {
         devs[devIdx].lastMsgTime = Date.now()
         devs[devIdx].regTime = Date.now()
         devs[devIdx].status = 0
+        this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
       }
       this.setState({ devices: devs })
     }
@@ -135,9 +174,9 @@ class App extends React.Component {
     const TblHdr = [{
       key: "alive",
       fieldName: "alive",
-      name: <Icon iconName="PlugConnected" />,
-      minWidth: 16,
-      maxWidth: 16,
+      name: <Icon iconName="PlugConnected" style={{fontSize: "20px"}} />,
+      minWidth: 22,
+      maxWidth: 22,
     }, {
       key: "hub",
       fieldName: "hub",
@@ -146,6 +185,9 @@ class App extends React.Component {
       maxWidth: 480,
       isPadded: true,
       isResizable: true,
+      onRender: (val) => {
+        return <div className="dtListCell">{val.hub}</div>
+      }
     }, {
       key: "dev",
       fieldName: "dev",
@@ -154,6 +196,21 @@ class App extends React.Component {
       maxWidth: 240,
       isPadded: true,
       isResizable: true,
+      onRender: (val) => {
+        return <div className="dtListCell">{val.dev}</div>
+      }
+    },
+    {
+      key: "lqi",
+      fieldName: "lqi",
+      name: "Уровень сигнала",
+      minWidth: 64,
+      maxWidth: 240,
+      isPadded: true,
+      isResizable: true,
+      onRender: (val) => {
+        return <div className="dtListCell">{val.lqi}</div>
+      }
     }, {
       key: "regTime",
       fieldName: "regTime",
@@ -164,9 +221,9 @@ class App extends React.Component {
       isResizable: true,
       onRender: (dt) => {
         if (dt.regTime !== ' - ') {
-          return new Date(dt.regTime).toLocaleTimeString('ru-RU')
+          return <div className="dtListCell">{new Date(dt.regTime).toLocaleTimeString('ru-RU')}</div>
         }
-        return dt.regTime
+        return <div className="dtListCell">{dt.regTime}</div>
       }
     }, {
       key: "lastMsgTime",
@@ -177,7 +234,7 @@ class App extends React.Component {
       isPadded: true,
       isResizable: true,
       onRender: (dt) => {
-        return new Date(dt.lastMsgTime).toLocaleTimeString('ru-RU')
+        return <div className="dtListCell">{new Date(dt.lastMsgTime).toLocaleTimeString('ru-RU')}</div>
       }
     }, {
       key: "status",
@@ -187,6 +244,9 @@ class App extends React.Component {
       maxWidth: 240,
       isPadded: true,
       isResizable: true,
+      onRender: (val) => {
+        return <div className="dtListCell">{val.status}</div>
+      }
     }]
 
     return <div>
