@@ -260,7 +260,7 @@ class App extends React.Component {
           </MessageBar>
           : ''
       }
-
+      <div style={{marginLeft: "4pt"}}><small>Количество устройств: <b>{this.state.devices.length}</b></small></div>
       <DetailsList
         setKey={"devices"}
         items={this.state.devices}
