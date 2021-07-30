@@ -2,6 +2,10 @@ import "./App.css"
 import React from 'react';
 import { DetailsList, SelectionMode, Icon, MessageBar, MessageBarType } from "@fluentui/react";
 import { initializeIcons } from '@fluentui/font-icons-mdl2';
+import { ModalComponent } from './ModalComponent';
+import devDesc from "./devices.json";
+
+
 initializeIcons();
 
 var mqtt = require('mqtt');
@@ -16,7 +20,8 @@ class App extends React.Component {
     this.state = {
       devices: [],
       msg: null,
-      mqttMsgPerMin: ' - '
+      mqttMsgPerMin: ' - ',
+      isModalDev: null
     };
     this.availabilityTmr = null
     this.mqttMsgPerMin = 0
@@ -149,11 +154,11 @@ class App extends React.Component {
    */
   onMessage = (topic, message) => {
 
-    let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}')
+    let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
     let devs = this.state.devices
     let devIdx = -1
     if (re.test(topic.toString())) {
-      let [, hub, dev] = topic.toString().match(re).toString().split('/', 3)
+      let [,  hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
       devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx === -1) {
         devIdx = devs.push({
@@ -163,11 +168,17 @@ class App extends React.Component {
           status: 0,
           lqi: 0,
           lastMsgTime: Date.now(),
+          regs: new Array(20).fill(0),
         }) - 1;
+        
         this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
       } else {
         devs[devIdx].dev = dev
       }
+
+      devs[devIdx]['regs'][0] = Number(dev)
+      devs[devIdx]['regs'][reg] = message.toString().split('.',2)[0]
+      console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]} ]`)
     }
 
     re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/status')
@@ -199,7 +210,8 @@ class App extends React.Component {
           regTime: Date.now(),
           status: 0,
           lqi: 0,
-          lastMsgTime: Date.now()
+          lastMsgTime: Date.now(),
+          regs: new Array(20).fill(0)
         })
         this.setDevStatusIcon(devs[devIdx-1], "StatusCircleCheckmark")
       } else {
@@ -228,6 +240,36 @@ class App extends React.Component {
     }
 
     return defaultRender(props)
+  }
+
+  /**
+   * По двойному нажатию на девайс
+   * Должно открывать окно с настройками
+   * @param {*} item Элмент
+   */
+  onShowDevWindow = (item) => {
+    this.client.publish(`/${item.hub}/error`, "3")
+    var idx = this.state.devices.findIndex((itm) => itm.hub === item.hub)
+    this.setState({isModalDev: this.state.devices[idx]['regs']})
+  }
+
+  /**
+   * По закрытию окна с значениями устройства
+   */
+  onCloseDevWindow = () => {
+    this.setState({isModalDev: null})
+  }
+
+  /**
+   * По изменению регистра
+   * @param {Number} serial Серийный номер девайса
+   * @param {Number} reg Регистр
+   * @param {Number} value Значение
+   */
+  onChangeReg = (serial, reg, value) => {
+    var item = this.state.devices.find((itm) => Number(itm.dev) === serial)
+    console.log(`publish event: [ Hub: ${item.hub}, Serial: ${serial}, Reg: ${reg}, Value: ${value} ]`)
+    this.client.publish(`/${item.hub}/${serial}/${reg}`, value.toString())
   }
 
   /**
@@ -330,6 +372,14 @@ class App extends React.Component {
         <small>Сообщений в минуту: <b>{this.state.mqttMsgPerMin}</b> </small>
       </div>
 
+      <ModalComponent
+        devDesc={devDesc['48']}
+        regValues={ this.state.isModalDev }
+        isOpen={this.state.isModalDev !== null}
+        onCancel={this.onCloseDevWindow}
+        onChangeReg={this.onChangeReg}
+      />
+
       <DetailsList
         setKey={"devices"}
         items={this.state.devices}
@@ -337,6 +387,7 @@ class App extends React.Component {
         selectionMode={SelectionMode.none}
         checkboxVisibility={false}
         onRenderRow={this.tblRenderRow}
+        onItemInvoked={this.onShowDevWindow}
         compact
       />
     </div>

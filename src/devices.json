@@ -1,6 +1,6 @@
 {
     "48": {
-        "name": "Терморегулятор LTC-030",
+        "name": "Регистры устройства",
         "regs": [
             {
                 "id": 0,
@@ -200,7 +200,7 @@
             {
                 "id": 14,
                 "name": "Часовой пояс",
-                "readonly": false,
+                "readonly": true,
                 "type": {
                     "name": "int",
                     "step": 0,
