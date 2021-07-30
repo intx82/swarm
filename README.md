@@ -1,70 +1,101 @@
-# Getting Started with Create React App
+# SWARM
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## MQTT
 
-## Available Scripts
+Описание протокола и что именно наблюдает swarm
 
-In the project directory, you can run:
+### Брокер
 
-### `npm start`
+MQTT брокер находится по адресу: x.ks.ua с портом 9001 для WS либо 1883 для TCP. Без сертификатов.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Топики MQTT
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+У всех топиков есть префикс из полученного ранее токена:
 
-### `npm test`
+Устройство будет общатся только через свой токен:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+`/{token}/{cmd}`
 
-### `npm run build`
+Чтение запись указывается со стороны устройства:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* R - Устройство будет публиковать данные в данный топик, но не будет подписано на него
+* W - Устройство подпишется на данный топик, но не публикует в него
+* RW - Устройство подписывается и публикует в данный топик
+* E - Устройство подписывается и публикует в данный топик, выполняем топик, указанное действие выполняется только если в данный топик публикуется название топика.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+| Название                       | R/W/RW/E | Тип данных          | описание                                                                                              |
+| ------------------------------ | -------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| /reg                           | W        | uint32_t            | Регистрация устройства на сервере                                                                     |
+| /hub                           | RW       | uint32_t            | Поиск хаба по ID устройства                                                                           |
+| /{token}/time                  | W        | uint32_t            | Сервер обновляет время на хабе и всех подключенных устройствах . Завершает регистрацию устройства     |
+| /{token}/lqi                   | R        | int32_t             | Отдает уровень сигнала (Link Quality information)                                                     |
+| /{token}/lifetime              | W        | uint32_t            | Максимальное время между отправкой статуса устройством. Указано в секундах. По-умолчанию 60 сек.      |
+| /{token}/info                  | R        | uint32_t            | Данные о подключенном хабе, отправляются после регистрации, отдает список подключенных устройств      |
+| /{token}/status                | R        | uint32_t            | Текущее состояние устройства. Хранит число событий с момента регистрации                              |
+| /{token}/ping                  | E        |                     | Простой запрос, что бы убедится, что девайс еще с нами,девайсы всегда возвращает "OK"                 |
+| /{token}/error                 | W        | uint32_t            | Номер ошибки хаба                                                                                     |
+| /{token}/{instance-id}/{reg}   | RW       | uint32_t            | Доступ к регистрам. По умолчанию данное устройство имеет instance-id = reg[0]                         |
+| /{token}/{instance-id}/type    | RE       | uint32_t            | Тип устройства                                                                                        |
+| /{token}/{instance-id}/version | E        | char[128]           | Версия устройства, максимальный размер строки: 128 байт                                               |
+| /{token}/{instance-id}/status  | R        | uint32_t            | Статус устройтсва (какое количество событий произошло с момента регистрации)                          |
+| /{token}/{instance-id}/read    | RW       | {uint32_t; uint8_t} | Чтение памяти устройства (расписание, итд), По умолчанию данное устройство имеет instance-id = reg[0] |
+| /{token}/{instance-id}/write   | RW       | {uint32_t; base64}  | Запись памяти устройства  По умолчанию данное устройство имеет instance-id = reg[0]                   |
+| /{token}/{instance-id}/reset   | RW       | uint32_t            | Сброс устройства в состояние по-умолчанию (то же 31 бит, 8-го регистра) (0/1).                        |
+|                                |          |                     | Для сброса необходимо опубликовать значение instance-id                                               |
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Топик /hub используется для поиска устройства без знания токена хаба, пример:
 
-### `npm run eject`
+```Text
+111222345 => /hub            # Клиент отправляет серийный номер устройства на броке
+/hub => aa:bb:cc:dd:ee:ff    # Хаб который содержит данное устройство отвечает со своим токеном
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Преобразование значений
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Передача значение регистров всегда происходит в формате беззнакового 32 битного числа (uint32) пример:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```Text
+/b8:27:eb:f2:97:2c/21032420/11 => 1106352370
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Но так как каждый регистр отвечает за разный функционал, для получения функционального значения необходимо произвести приведение типов.
+На данный момент описание типов и функционального назначения выполняется в файле 'devices.json'
 
-## Learn More
+Используемые типы в devices.json
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| Название | Параметры                       | Описание                                                                                            |
+| -------- | ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| int      | step - Размер приращения (Шаг)  | Знаковое число, в конвертации не нуждается.                                                         |
+|          | minimum - Минимальное значение  | Пример: 12345 => 12345                                                                              |
+|          | maximum - Максимальное значение |                                                                                                     |
+| unixtime | -                               | Время в секундах от 01.01.1970 00:00:00                                                             |
+|          |                                 | Пример: 1627260919 =>  Mon Jul 26 2021 00:55:19 GMT+0000                                            |
+| float    | step - Размер приращения (Шаг)  | Число с плавающей запятой IEE754                                                                    |
+|          | minimum - Минимальное значение  | Пример: 1106352370 => 30.1996803284                                                                 |
+|          | maximum - Максимальное значение | см: <https://www.h-schmidt.net/FloatConverter/IEEE754.html>                                         |
+| bitfield | bits - Описание битов           | Битовое значение. В описании битов указывается назначение (name) и возможность изменения (readonly) |
+|          |                                 | Пример: 72 => 0100 1000 => Включен 3-ий и 6-ой бит (8 + 64 = 72)                                    |
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Описание устройства
 
-### Code Splitting
+Устройство описывается в файле devices.json и имеет следующую структуру:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```JSON
+{
+"Тип устройства (int)" : {
+    "name" : "Имя типа устройства, пример 'Терморегулятор'",
+    "regs" : [ // Описание регистров устройства
+        {
+            "id": "Номер регистра (int)",
+            "name": "Функциональное назначение регистра",
+            "readonly": "Регистр только для чтения или нет",
+            "type": { // Тип данных
+                "name": "Название типа данных"
+                ...
+            }
+        },
+        ...
+        ]
+    }
+}
+```
