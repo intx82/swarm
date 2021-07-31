@@ -169,6 +169,7 @@ class App extends React.Component {
           lqi: 0,
           lastMsgTime: Date.now(),
           regs: new Array(20).fill(0),
+          mark: false,
         }) - 1;
         
         this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
@@ -211,6 +212,7 @@ class App extends React.Component {
           status: 0,
           lqi: 0,
           lastMsgTime: Date.now(),
+          mark: false,
           regs: new Array(20).fill(0)
         })
         this.setDevStatusIcon(devs[devIdx-1], "StatusCircleCheckmark")
@@ -223,7 +225,12 @@ class App extends React.Component {
     }
 
     this.mqttMsgPerMin = this.mqttMsgPerMin + 1;
-    if (devIdx !== -1) {
+    if (devIdx !== -1 ) {
+      if (typeof devs[devIdx] === 'undefined') {
+        console.log("Exception", devIdx, devs)
+        return
+      }
+
       this.DevCommitMessage(devs, devIdx)
     }
   }

@@ -6,9 +6,8 @@ import {
   mergeStyleSets,
   FontWeights,
   Slider,
-  IconButton
+  IconButton,
 } from "@fluentui/react";
-
 
 import { DefaultButton } from "@fluentui/react/lib/Button";
 import Accordion from "@material-ui/core/Accordion";
@@ -18,7 +17,6 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { Checkbox, Stack } from "@fluentui/react";
 
 export const ModalComponent = (props) => {
-
   const titleId = useId("title");
   const checkType = (item) => {
     function ISODateString(date) {
@@ -49,7 +47,7 @@ export const ModalComponent = (props) => {
         inData & 0xff,
       ]).buffer;
       var view = new DataView(bFloat);
-      return view.getFloat32(0, false);
+      return view.getFloat32(0, false).toFixed(2)
     };
 
     const calculateToUint = (inData) => {
@@ -57,6 +55,24 @@ export const ModalComponent = (props) => {
       new DataView(tmpBuf).setFloat32(0, inData);
       return new DataView(tmpBuf).getUint32(0, false);
     };
+
+    const genBit = (arr) => {
+      if (Array.isArray(arr)) {
+        let res = 0;
+        for (let i = 0; i < arr.length; i++) {
+          if (arr[i]) {
+            res |= 1 << i;
+          } else {
+            res &= ~(1 << i);
+          }
+        }
+        return res;
+      }
+    };
+
+    function testBit(num, bitNum) {
+      return (Number(num) & (1 << bitNum)) === 1 << bitNum;
+    }
 
     if (item.readonly) {
       if (item.type.name === "unixtime") {
@@ -80,11 +96,19 @@ export const ModalComponent = (props) => {
           label={item.name}
           min={item.type.minimum}
           max={item.type.maximum}
-          defaultValue={item.type.name === "int" ? props.regValues[item.id] : calculate(props.regValues[item.id])}
+          value={
+            item.type.name === "int"
+              ? props.regValues[item.id]
+              : calculate(props.regValues[item.id])
+          }
           step={item.type.step > 0 ? item.type.step : 1}
           onChange={(val) => {
             if (typeof props.onChangeReg === "function") {
-              props.onChangeReg(props.regValues[0], item.id, calculateToUint(val));
+              props.onChangeReg(
+                props.regValues[0],
+                item.id,
+                calculateToUint(val)
+              );
             }
           }}
           showValue
@@ -109,12 +133,27 @@ export const ModalComponent = (props) => {
           </AccordionSummary>
           <AccordionDetails>
             <Stack tokens={{ childrenGap: 10 }}>
-              {item.type.bits.map((item, index) => {
+              {item.type.bits.map((obj, index) => {
+                let arr = [];
+                for (let i = 0; i < 8; i++) {
+                  arr.push(testBit(props.regValues[item.id], i));
+                }
                 return (
                   <Checkbox
-                    label={item.name}
-                    disabled={item.readonly}
-                    key={index}
+                    label={obj.name}
+                    disabled={obj.readonly}
+                    key={`checkbox ${index}`}
+                    checked={testBit(props.regValues[item.id], index)}
+                    onChange={(val) => {
+                      arr[index] = !arr[index];
+                      if (typeof props.onChangeReg === "function") {
+                        props.onChangeReg(
+                          props.regValues[0],
+                          item.id,
+                          genBit(arr)
+                        );
+                      }
+                    }}
                   />
                 );
               })}
@@ -129,14 +168,22 @@ export const ModalComponent = (props) => {
     <Modal
       titleAriaId={titleId}
       isOpen={props.isOpen}
-      onDismiss={typeof props.onCancel === "function" ? props.onCancel : () => console.log('Cancel')}
+      onDismiss={
+        typeof props.onCancel === "function"
+          ? props.onCancel
+          : () => console.log("Cancel")
+      }
       containerClassName={contentStyles.container}
     >
       <div className={contentStyles.header}>
         <span id={titleId}>{props.devDesc.name}</span>
         <IconButton
           className={contentStyles.iconButtonStyles}
-          onClick={typeof props.onCancel === "function" ? props.onCancel : () => console.log('Cancel')}
+          onClick={
+            typeof props.onCancel === "function"
+              ? props.onCancel
+              : () => console.log("Cancel")
+          }
           iconProps={cancelIcon}
           ariaLabel="Close popup modal"
         />
@@ -144,25 +191,30 @@ export const ModalComponent = (props) => {
       <hr style={{ color: "#f0f0f0", backgroundColor: "#f0f0f0" }} />
       <div className={contentStyles.body}>
         {props.devDesc.regs.map((item, index) => {
-          return <div key={index}>{props.regValues ? checkType(item) : " "}</div>;
+          return (
+            <div key={`item ${index}`}>
+              {props.regValues ? checkType(item) : " "}
+            </div>
+          );
         })}
       </div>
       <hr style={{ color: "#f0f0f0", backgroundColor: "#f0f0f0" }} />
       <DefaultButton
         text="Закрыть"
-        onClick={typeof props.onCancel === "function" ? props.onCancel : () => console.log('Cancel')}
-        style={{ marginLeft: "360pt", marginBottom: "12pt" }}
+        onClick={
+          typeof props.onCancel === "function"
+            ? props.onCancel
+            : () => console.log("Cancel")
+        }
+        style={{ marginLeft: "12pt", marginBottom: "12pt" }}
       />
     </Modal>
   );
-
 };
 
 const theme = getTheme();
 
-
-const cancelIcon = { iconName: 'Cancel' };
-
+const cancelIcon = { iconName: "Cancel" };
 
 const contentStyles = mergeStyleSets({
   container: {
@@ -173,9 +225,9 @@ const contentStyles = mergeStyleSets({
   },
   iconButtonStyles: {
     color: "#333333",
-    marginLeft: 'auto',
-    marginTop: '4px',
-    marginRight: '2px',
+    marginLeft: "auto",
+    marginTop: "4px",
+    marginRight: "2px",
   },
   header: [
     theme.fonts.xLargePlus,
