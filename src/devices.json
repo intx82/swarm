@@ -1,4 +1,52 @@
 {
+    "unknown": {
+        "name": "Неизвестное устройство",
+        "regs": [
+            {
+                "id": 0,
+                "name": "Серийный номер",
+                "readonly": true,
+                "type": {
+                    "name": "int",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4294967296
+                }
+            },
+            {
+                "id": 1,
+                "name": "Время регистрации",
+                "readonly": true,
+                "type": {
+                    "name": "unixtime"
+                }
+            }
+        ]
+    },
+    "0": {
+        "name": "Ожидание типа устройства..",
+        "regs": [
+            {
+                "id": 0,
+                "name": "Серийный номер",
+                "readonly": true,
+                "type": {
+                    "name": "int",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4294967296
+                }
+            },
+            {
+                "id": 1,
+                "name": "Время регистрации",
+                "readonly": true,
+                "type": {
+                    "name": "unixtime"
+                }
+            }
+        ]
+    },
     "48": {
         "name": "Регистры устройства",
         "regs": [
@@ -137,7 +185,7 @@
                         {
                             "id": 9,
                             "name": "Блокировка панели",
-                            "readonly": true
+                            "readonly": false
                         }
                     ]
                 }
@@ -381,7 +429,7 @@
                         {
                             "id": 9,
                             "name": "Блокировка панели",
-                            "readonly": true
+                            "readonly": false
                         }
                     ]
                 }
@@ -727,6 +775,63 @@
                     "step": 0,
                     "minimum": 0,
                     "maximum": 4294967296
+                }
+            }
+        ]
+    },
+    "1024": {
+        "name": "Солнечная панель",
+        "regs": [
+            {
+                "id": 0,
+                "name": "Серийный номер",
+                "readonly": true,
+                "type": {
+                    "name": "int",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4294967296
+                }
+            },
+            {
+                "id": 1,
+                "name": "Время регистрации",
+                "readonly": true,
+                "type": {
+                    "name": "unixtime"
+                }
+            },
+            {
+                "id": 9,
+                "name": "Напряжение батарей",
+                "readonly": true,
+                "type": {
+                    "name": "float",
+                    "step": 0,
+                    "minimum": 9,
+                    "maximum": 128
+                }
+            },
+            {
+                "id": 11,
+                "name": "Текущая мощность",
+                "readonly": true,
+                "type": {
+                    "name": "float",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4800
+                }
+            },
+            {
+                "id": 12,
+                "name": "Температура платы",
+                "readonly": true,
+                "type": {
+                    "name": "float",
+                    "step": 0,
+                    "minimum": -50.0,
+                    "maximum": 120.0
                 }
             }
         ]

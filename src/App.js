@@ -2,8 +2,10 @@ import "./App.css"
 import React from 'react';
 import { DetailsList, SelectionMode, Icon, MessageBar, MessageBarType } from "@fluentui/react";
 import { initializeIcons } from '@fluentui/font-icons-mdl2';
+import { FontSizes } from "@fluentui/style-utilities";
 import { ModalComponent } from './ModalComponent';
 import devDesc from "./devices.json";
+import ver from "./version.json"
 
 
 initializeIcons();
@@ -379,8 +381,10 @@ class App extends React.Component {
         <small>Сообщений в минуту: <b>{this.state.mqttMsgPerMin}</b> </small>
       </div>
 
+      
+
       <ModalComponent
-        devDesc={devDesc['48']}
+        devDesc={devDesc}
         regValues={ this.state.isModalDev }
         isOpen={this.state.isModalDev !== null}
         onCancel={this.onCloseDevWindow}
@@ -397,6 +401,9 @@ class App extends React.Component {
         onItemInvoked={this.onShowDevWindow}
         compact
       />
+      <div className="ftr">
+        <p style={{ fontSize: FontSizes.size10 }} >Версия: {ver}</p>
+      </div>
     </div>
   }
 };

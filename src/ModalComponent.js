@@ -18,7 +18,17 @@ import { Checkbox, Stack } from "@fluentui/react";
 
 export const ModalComponent = (props) => {
   const titleId = useId("title");
+  /**
+   * Конвертирует тип данных в компонент
+   * @param {object} item 
+   * @returns 
+   */
   const checkType = (item) => {
+    /**
+     * Преобразовывает Unixtime
+     * @param {date} date 
+     * @returns 
+     */
     function ISODateString(date) {
       let time = new Date(date * 1000);
       function pad(n) {
@@ -39,6 +49,11 @@ export const ModalComponent = (props) => {
       );
     }
 
+    /**
+     * Преобразовывает в float
+     * @param {number} inData 
+     * @returns 
+     */
     const calculate = (inData) => {
       const bFloat = new Uint8Array([
         (inData >> 24) & 0xff,
@@ -50,12 +65,22 @@ export const ModalComponent = (props) => {
       return view.getFloat32(0, false).toFixed(2)
     };
 
+    /**
+     * Преобразовывает из float в uint32
+     * @param {number} inData 
+     * @returns 
+     */
     const calculateToUint = (inData) => {
       var tmpBuf = new ArrayBuffer(4);
       new DataView(tmpBuf).setFloat32(0, inData);
       return new DataView(tmpBuf).getUint32(0, false);
     };
 
+    /**
+     * Преобразовывает биты
+     * @param {Array} arr 
+     * @returns 
+     */
     const genBit = (arr) => {
       if (Array.isArray(arr)) {
         let res = 0;
@@ -70,6 +95,12 @@ export const ModalComponent = (props) => {
       }
     };
 
+    /**
+     * Проверяет установлен ли бит
+     * @param {number} num Входящее число 
+     * @param {number} bitNum Номер бита
+     * @returns 
+     */
     function testBit(num, bitNum) {
       return (Number(num) & (1 << bitNum)) === 1 << bitNum;
     }
@@ -135,17 +166,20 @@ export const ModalComponent = (props) => {
             <Stack tokens={{ childrenGap: 10 }}>
               {item.type.bits.map((obj, index) => {
                 let arr = [];
-                for (let i = 0; i < 8; i++) {
+
+                for (let i = 0; i < 32; i++) {
                   arr.push(testBit(props.regValues[item.id], i));
                 }
+
+                const rIdx = item.type.bits[index].id
                 return (
                   <Checkbox
                     label={obj.name}
                     disabled={obj.readonly}
-                    key={`checkbox ${index}`}
-                    checked={testBit(props.regValues[item.id], index)}
+                    key={`checkbox ${rIdx}`}
+                    checked={testBit(props.regValues[item.id], rIdx)}
                     onChange={(val) => {
-                      arr[index] = !arr[index];
+                      arr[rIdx] = !arr[rIdx];
                       if (typeof props.onChangeReg === "function") {
                         props.onChangeReg(
                           props.regValues[0],
@@ -164,6 +198,8 @@ export const ModalComponent = (props) => {
     }
   };
 
+  const devType = props.isOpen ? props.regValues[15] : 0
+  const devDesc = props.devDesc.hasOwnProperty(devType) ? props.devDesc[devType] : props.devDesc['unknown']
   return (
     <Modal
       titleAriaId={titleId}
@@ -176,7 +212,7 @@ export const ModalComponent = (props) => {
       containerClassName={contentStyles.container}
     >
       <div className={contentStyles.header}>
-        <span id={titleId}>{props.devDesc.name}</span>
+        <span id={titleId}>{devDesc.name}</span>
         <IconButton
           className={contentStyles.iconButtonStyles}
           onClick={
@@ -190,7 +226,7 @@ export const ModalComponent = (props) => {
       </div>
       <hr style={{ color: "#f0f0f0", backgroundColor: "#f0f0f0" }} />
       <div className={contentStyles.body}>
-        {props.devDesc.regs.map((item, index) => {
+        {devDesc.regs.map((item, index) => {
           return (
             <div key={`item ${index}`}>
               {props.regValues ? checkType(item) : " "}
