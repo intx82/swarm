@@ -1,12 +1,12 @@
 import "./App.css"
 import React from 'react';
-import { DetailsList, SelectionMode, Icon, MessageBar, MessageBarType } from "@fluentui/react";
+import { DetailsList, SelectionMode, Icon, MessageBar, MessageBarType, IconButton, Stack } from "@fluentui/react";
 import { initializeIcons } from '@fluentui/font-icons-mdl2';
 import { FontSizes } from "@fluentui/style-utilities";
-import { ModalComponent } from './ModalComponent';
+import { DevForm } from './DevForm';
+import { LoginForm } from './LoginForm';
 import devDesc from "./devices.json";
 import ver from "./version.json"
-
 
 initializeIcons();
 
@@ -23,7 +23,8 @@ class App extends React.Component {
       devices: [],
       msg: null,
       mqttMsgPerMin: ' - ',
-      isModalDev: null
+      DevRegs: null,
+      isLoginOpen: false,
     };
     this.availabilityTmr = null
     this.mqttMsgPerMin = 0
@@ -140,10 +141,10 @@ class App extends React.Component {
    */
   DevCommitMessage = (devs, idx, state = true) => {
     devs[idx].mark = state
-    
+
     if (state) {
       this.updateDevLastMsgTime(devs[idx])
-      setTimeout(()=>this.DevCommitMessage(devs, idx, false), 1000)
+      setTimeout(() => this.DevCommitMessage(devs, idx, false), 1000)
     }
 
     this.setState({ devices: devs })
@@ -160,7 +161,7 @@ class App extends React.Component {
     let devs = this.state.devices
     let devIdx = -1
     if (re.test(topic.toString())) {
-      let [,  hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
+      let [, hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
       devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx === -1) {
         devIdx = devs.push({
@@ -173,14 +174,14 @@ class App extends React.Component {
           regs: new Array(20).fill(0),
           mark: false,
         }) - 1;
-        
+
         this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
       } else {
         devs[devIdx].dev = dev
       }
 
       devs[devIdx]['regs'][0] = Number(dev)
-      devs[devIdx]['regs'][reg] = message.toString().split('.',2)[0]
+      devs[devIdx]['regs'][reg] = message.toString().split('.', 2)[0]
       console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]} ]`)
     }
 
@@ -217,7 +218,7 @@ class App extends React.Component {
           mark: false,
           regs: new Array(20).fill(0)
         })
-        this.setDevStatusIcon(devs[devIdx-1], "StatusCircleCheckmark")
+        this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
       } else {
         devs[devIdx].lastMsgTime = Date.now()
         devs[devIdx].regTime = Date.now()
@@ -227,7 +228,7 @@ class App extends React.Component {
     }
 
     this.mqttMsgPerMin = this.mqttMsgPerMin + 1;
-    if (devIdx !== -1 ) {
+    if (devIdx !== -1) {
       if (typeof devs[devIdx] === 'undefined') {
         console.log("Exception", devIdx, devs)
         return
@@ -244,8 +245,8 @@ class App extends React.Component {
    * @returns 
    */
   tblRenderRow = (props, defaultRender) => {
-    if ( props.item.mark ) {
-      return defaultRender({...props, styles: {root: {background: '#fafaea'}}})
+    if (props.item.mark) {
+      return defaultRender({ ...props, styles: { root: { background: '#fafaea' } } })
     }
 
     return defaultRender(props)
@@ -259,14 +260,20 @@ class App extends React.Component {
   onShowDevWindow = (item) => {
     this.client.publish(`/${item.hub}/error`, "3")
     var idx = this.state.devices.findIndex((itm) => itm.hub === item.hub)
-    this.setState({isModalDev: this.state.devices[idx]['regs']})
+    this.setState({ DevRegs: this.state.devices[idx]['regs'] })
   }
 
   /**
    * По закрытию окна с значениями устройства
    */
   onCloseDevWindow = () => {
-    this.setState({isModalDev: null})
+    document.getElementById("root").style.filter = "None"
+
+
+    this.setState({
+      DevRegs: null,
+      isLoginOpen: false
+    })
   }
 
   /**
@@ -289,7 +296,7 @@ class App extends React.Component {
     const TblHdr = [{
       key: "alive",
       fieldName: "alive",
-      name: <Icon iconName="PlugConnected" style={{fontSize: "20px"}} />,
+      name: <Icon iconName="PlugConnected" style={{ fontSize: "20px" }} />,
       minWidth: 22,
       maxWidth: 22,
     }, {
@@ -375,20 +382,38 @@ class App extends React.Component {
           </MessageBar>
           : ''
       }
-      
-      <div style={{marginLeft: "4pt"}}>
-        <small>Количество устройств: <b>{this.state.devices.length}</b> </small>
-        <small>Сообщений в минуту: <b>{this.state.mqttMsgPerMin}</b> </small>
-      </div>
 
-      
+      <Stack style={{ marginLeft: "4pt" }} horizontal reversed>
+        <Stack.Item style={{ marginRight: "4pt" }} >
+          <IconButton
+            iconProps={{ iconName: "FollowUser" }}
+            aria-label="login"
+            onClick={() => {
+              document.getElementById("root").style.filter = "blur(3px)"
+              this.setState({ isLoginOpen: true })
+            }}
+          />
+        </Stack.Item>
+        <Stack.Item grow disableShrink >&nbsp;</Stack.Item>
+        <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center" >
+          <small>Количество устройств: <b>{this.state.devices.length}</b> </small>
+        </Stack.Item>
+        <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center">
+          <small>Сообщений в минуту: <b>{this.state.mqttMsgPerMin}</b> </small>
+        </Stack.Item>
+      </Stack>
 
-      <ModalComponent
+      <DevForm
         devDesc={devDesc}
-        regValues={ this.state.isModalDev }
-        isOpen={this.state.isModalDev !== null}
+        regValues={this.state.DevRegs}
+        isOpen={this.state.DevRegs !== null}
         onCancel={this.onCloseDevWindow}
         onChangeReg={this.onChangeReg}
+      />
+
+      <LoginForm
+        isOpen={this.state.isLoginOpen}
+        onCancel={this.onCloseDevWindow}
       />
 
       <DetailsList

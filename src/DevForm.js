@@ -16,7 +16,7 @@ import AccordionDetails from "@material-ui/core/AccordionDetails";
 import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import { Checkbox, Stack } from "@fluentui/react";
 
-export const ModalComponent = (props) => {
+export const DevForm = (props) => {
   const titleId = useId("title");
   /**
    * Конвертирует тип данных в компонент
