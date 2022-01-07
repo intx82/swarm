@@ -7,6 +7,7 @@ import { DevForm } from './DevForm';
 import { LoginForm } from './LoginForm';
 import devDesc from "./devices.json";
 import ver from "./version.json"
+import { sha256 } from "js-sha256"
 
 initializeIcons();
 
@@ -25,6 +26,11 @@ class App extends React.Component {
       mqttMsgPerMin: ' - ',
       DevRegs: null,
       isLoginOpen: false,
+      user: {
+        login: null,
+        pwd: null,
+        hash: null
+      }
     };
     this.availabilityTmr = null
     this.mqttMsgPerMin = 0
@@ -182,7 +188,8 @@ class App extends React.Component {
 
       devs[devIdx]['regs'][0] = Number(dev)
       devs[devIdx]['regs'][reg] = message.toString().split('.', 2)[0]
-      console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]} ]`)
+      devs[devIdx]['auth'] = message.toString().split('.', 2).length > 1
+      console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]}, auth: ${devs[devIdx]['auth']} ]`)
     }
 
     re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/status')
@@ -260,7 +267,7 @@ class App extends React.Component {
   onShowDevWindow = (item) => {
     this.client.publish(`/${item.hub}/error`, "3")
     var idx = this.state.devices.findIndex((itm) => itm.hub === item.hub)
-    this.setState({ DevRegs: this.state.devices[idx]['regs'] })
+    this.setState({ DevRegs: this.state.devices[idx] })
   }
 
   /**
@@ -269,11 +276,28 @@ class App extends React.Component {
   onCloseDevWindow = () => {
     document.getElementById("root").style.filter = "None"
 
-
     this.setState({
       DevRegs: null,
       isLoginOpen: false
     })
+  }
+
+  /**
+   * По входу пользователя
+   * 
+   * @param {String} login 
+   * @param {String} pwd 
+   * @param {Uint8Array} hash 
+   */
+  onLoginUser = (login, pwd, hash) => {
+    this.setState({
+      user: {
+        login: login,
+        pwd: pwd,
+        hash: hash
+      }
+    })
+    this.onCloseDevWindow()
   }
 
   /**
@@ -285,6 +309,14 @@ class App extends React.Component {
   onChangeReg = (serial, reg, value) => {
     var item = this.state.devices.find((itm) => Number(itm.dev) === serial)
     console.log(`publish event: [ Hub: ${item.hub}, Serial: ${serial}, Reg: ${reg}, Value: ${value} ]`)
+
+    if (this.state.user.hash) {
+      const hmac = sha256.hmac.create(this.state.user.hash)
+      hmac.update(String(value))
+      const sign = Buffer.from(hmac.array()).toString('base64')
+      value = String(value) + '.' + String(sign)
+    }
+
     this.client.publish(`/${item.hub}/${serial}/${reg}`, value.toString())
   }
 
@@ -386,14 +418,28 @@ class App extends React.Component {
       <Stack style={{ marginLeft: "4pt" }} horizontal reversed>
         <Stack.Item style={{ marginRight: "4pt" }} >
           <IconButton
-            iconProps={{ iconName: "FollowUser" }}
+            iconProps={{ iconName: !this.state.user.hash ? "FollowUser" : "UserRemove" }}
             aria-label="login"
             onClick={() => {
-              document.getElementById("root").style.filter = "blur(3px)"
-              this.setState({ isLoginOpen: true })
+              if (!this.state.user.hash) {
+                document.getElementById("root").style.filter = "blur(3px)"
+                this.setState({ isLoginOpen: true })
+              } else {
+                this.setState({
+                  user: {
+                    login: null,
+                    hash: null,
+                    pwd: null
+                  }
+                })
+              }
             }}
           />
         </Stack.Item>
+        {this.state.user.login && this.state.user.hash ?
+          <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center" >
+            <small>{this.state.user.login} ({Buffer.from(this.state.user.hash).toString('hex').substring(0, 8)})</small>
+          </Stack.Item> : ''}
         <Stack.Item grow disableShrink >&nbsp;</Stack.Item>
         <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center" >
           <small>Количество устройств: <b>{this.state.devices.length}</b> </small>
@@ -403,18 +449,22 @@ class App extends React.Component {
         </Stack.Item>
       </Stack>
 
-      <DevForm
-        devDesc={devDesc}
-        regValues={this.state.DevRegs}
-        isOpen={this.state.DevRegs !== null}
-        onCancel={this.onCloseDevWindow}
-        onChangeReg={this.onChangeReg}
-      />
+      {this.state.DevRegs !== null ?
+        <DevForm
+          devDesc={devDesc}
+          regValues={this.state.DevRegs['regs']}
+          readOnly={this.state.DevRegs['auth'] & !(!!this.state.user.hash)}
+          isOpen={this.state.DevRegs !== null}
+          onCancel={this.onCloseDevWindow}
+          onChangeReg={this.onChangeReg}
+        /> : ''}
 
-      <LoginForm
-        isOpen={this.state.isLoginOpen}
-        onCancel={this.onCloseDevWindow}
-      />
+      {this.state.isLoginOpen ?
+        <LoginForm
+          isOpen={this.state.isLoginOpen}
+          onCancel={this.onCloseDevWindow}
+          onLogin={this.onLoginUser}
+        /> : ''}
 
       <DetailsList
         setKey={"devices"}

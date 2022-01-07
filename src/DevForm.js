@@ -18,6 +18,8 @@ import { Checkbox, Stack } from "@fluentui/react";
 
 export const DevForm = (props) => {
   const titleId = useId("title");
+  const devReadOnly = props.readOnly
+
   /**
    * Конвертирует тип данных в компонент
    * @param {object} item 
@@ -127,6 +129,7 @@ export const DevForm = (props) => {
           label={item.name}
           min={item.type.minimum}
           max={item.type.maximum}
+          disabled={devReadOnly}
           value={
             item.type.name === "int"
               ? props.regValues[item.id]
@@ -175,7 +178,7 @@ export const DevForm = (props) => {
                 return (
                   <Checkbox
                     label={obj.name}
-                    disabled={obj.readonly}
+                    disabled={obj.readonly || devReadOnly}
                     key={`checkbox ${rIdx}`}
                     checked={testBit(props.regValues[item.id], rIdx)}
                     onChange={(val) => {
@@ -226,6 +229,7 @@ export const DevForm = (props) => {
       </div>
       <hr style={{ color: "#f0f0f0", backgroundColor: "#f0f0f0" }} />
       <div className={contentStyles.body}>
+        {devReadOnly ? <p>Для управления устройством необходима авторизация</p> : ''}
         {devDesc.regs.map((item, index) => {
           return (
             <div key={`item ${index}`}>
