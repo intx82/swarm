@@ -27,6 +27,14 @@ export const LoginForm = (props) => {
       );
   };
 
+  const onLoginFn = typeof props.onLogin === "function"
+    ? () => {
+      let hash = String(login) + '\0' + String(pwd)
+      const hasher = sha256.update(hash)
+      props.onLogin(login, pwd, new Uint8Array(hasher.arrayBuffer()))
+    }
+    : () => console.log("Login")
+
   return (
     <Modal
       titleAriaId={titleId}
@@ -70,6 +78,11 @@ export const LoginForm = (props) => {
               setPwd(val.target.value)
             }}
             revealPasswordAriaLabel="Показать пароль"
+            onKeyUp={(event) => {
+              if (event.key === 'Enter' && validateLogin(login) && String(pwd).length >= 8) {
+                onLoginFn()
+              }
+            }}
           />
         </Stack>
       </div>
@@ -77,15 +90,7 @@ export const LoginForm = (props) => {
       <PrimaryButton
         text="Вход"
         disabled={(!validateLogin(login)) || (String(pwd).length < 8)}
-        onClick={
-          typeof props.onLogin === "function"
-            ? () => {
-              let hash = String(login) + '\0' + String(pwd)
-              const hasher = sha256.update(hash)
-              props.onLogin(login, pwd, new Uint8Array(hasher.arrayBuffer()))
-            }
-            : () => console.log("Cancel")
-        }
+        onClick={onLoginFn}
         style={{ marginLeft: "12pt", marginBottom: "12pt" }}
       />
     </Modal>

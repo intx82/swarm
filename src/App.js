@@ -130,7 +130,6 @@ class App extends React.Component {
    */
   updateDevLastMsgTime = (dev) => {
     if ((dev.lastMsgTime + 60000) < Date.now()) {
-      // console.log(dev, "restored")
       this.setDevStatusIcon(dev, "Warning")
     } else {
       this.setDevStatusIcon(dev, "StatusCircleCheckmark")
@@ -178,6 +177,7 @@ class App extends React.Component {
           lqi: 0,
           lastMsgTime: Date.now(),
           regs: new Array(20).fill(0),
+          auth: false,
           mark: false,
         }) - 1;
 
