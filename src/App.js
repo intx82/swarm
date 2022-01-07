@@ -57,34 +57,32 @@ class App extends React.Component {
     this.client.end()
   }
 
+  setMsg = (msg, timeout = 2500) => {
+    this.setState((state) => {
+      state.msg = msg
+      setTimeout(() => this.setState({ msg: null }), timeout)
+      return state
+    })
+  }
+
   /**
    * По ошибке
    */
   onError = () => {
-    this.setState((state) => {
-      state.msg = {
+    this.setMsg({
         type: MessageBarType.error,
         text: "Ошибка подключения"
-      }
-
-      setTimeout(() => this.setState({ msg: null }), 2500)
-      return state
-    })
+      })
   }
 
   /**
    * По подключению к брокеру
    */
   onConnect = () => {
-    this.setState((state) => {
-      state.msg = {
+    this.setMsg( {
         type: MessageBarType.success,
         text: "Подключение успешно"
-      }
-
-      setTimeout(() => this.setState({ msg: null }), 2500)
-      return state
-    })
+      })
 
     this.client.subscribe('/#');
   }
@@ -298,6 +296,10 @@ class App extends React.Component {
       }
     })
     this.onCloseDevWindow()
+    this.setMsg({
+      text: `Вы вошли как ${login}`,
+      type: MessageBarType.info
+    })
   }
 
   /**
