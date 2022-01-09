@@ -1,6 +1,12 @@
 import "./App.css"
 import React from 'react';
-import { DetailsList, SelectionMode, Icon, MessageBar, MessageBarType, IconButton, Stack } from "@fluentui/react";
+import {
+  DetailsList,
+  SelectionMode,
+  Icon, MessageBar, MessageBarType, IconButton, Stack, mergeStyleSets, ContextualMenu,
+  Link,
+  Toggle
+} from "@fluentui/react";
 import { initializeIcons } from '@fluentui/font-icons-mdl2';
 import { FontSizes } from "@fluentui/style-utilities";
 import { DevForm } from './DevForm';
@@ -16,6 +22,17 @@ var options = {
   protocol: 'ws'
 };
 
+
+const contentStyles = mergeStyleSets({
+  dtListCell: {
+    display: "flex",
+    alignItems: "center",
+    height: "32px",
+    fontSize: "10pt"
+  }
+})
+
+
 class App extends React.Component {
 
   constructor(props) {
@@ -30,8 +47,11 @@ class App extends React.Component {
         login: null,
         pwd: null,
         hash: null
-      }
+      },
+      devCols: [true, true, true, true, true, true, true, true],
+      tblColsMenuShow: false
     };
+    this.tblColsMenuLinkRef = React.createRef();
     this.availabilityTmr = null
     this.mqttMsgPerMin = 0
   }
@@ -70,19 +90,19 @@ class App extends React.Component {
    */
   onError = () => {
     this.setMsg({
-        type: MessageBarType.error,
-        text: "Ошибка подключения"
-      })
+      type: MessageBarType.error,
+      text: "Ошибка подключения"
+    })
   }
 
   /**
    * По подключению к брокеру
    */
   onConnect = () => {
-    this.setMsg( {
-        type: MessageBarType.success,
-        text: "Подключение успешно"
-      })
+    this.setMsg({
+      type: MessageBarType.success,
+      text: "Подключение успешно"
+    })
 
     this.client.subscribe('/#');
   }
@@ -165,6 +185,7 @@ class App extends React.Component {
     let devIdx = -1
     if (re.test(topic.toString())) {
       let [, hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
+      reg = Number(reg)
       devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx === -1) {
         devIdx = devs.push({
@@ -177,6 +198,8 @@ class App extends React.Component {
           regs: new Array(20).fill(0),
           auth: false,
           mark: false,
+          type: null,
+          version: null
         }) - 1;
 
         this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
@@ -185,9 +208,36 @@ class App extends React.Component {
       }
 
       devs[devIdx]['regs'][0] = Number(dev)
-      devs[devIdx]['regs'][reg] = message.toString().split('.', 2)[0]
+      devs[devIdx]['regs'][reg] = Number(message.toString().split('.', 2)[0])
       devs[devIdx]['auth'] = message.toString().split('.', 2).length > 1
       console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]}, auth: ${devs[devIdx]['auth']} ]`)
+
+      if (reg === 15) {
+        const devType = devs[devIdx]['regs'][15]
+        devs[devIdx].type = devDesc.hasOwnProperty(devType) ? devDesc[devType].name : null
+      } else if (reg === 1) {
+        devs[devIdx].regTime = new Date(devs[devIdx]['regs'][1] * 1000)
+      }
+    }
+
+    re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/version')
+    if (re.test(topic.toString()) && !message.toString().startsWith('version')) {
+      let [, hub] = topic.toString().toString().split('/', 2)
+      devIdx = devs.findIndex((itm) => itm.hub === hub)
+      if (devIdx !== -1) {
+        devs[devIdx].version = message.toString().split('.', 2)[0]
+      }
+    }
+
+    re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/type')
+    if (re.test(topic.toString()) && !message.toString().startsWith('type')) {
+      let [, hub] = topic.toString().toString().split('/', 2)
+      devIdx = devs.findIndex((itm) => itm.hub === hub)
+      if (devIdx !== -1) {
+        devs[devIdx]['regs'][15] = Number(message.toString().split('.', 2)[0])
+        const devType = devs[devIdx]['regs'][15]
+        devs[devIdx].type = devDesc.hasOwnProperty(devType) ? devDesc[devType].name : null
+      }
     }
 
     re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/status')
@@ -303,6 +353,27 @@ class App extends React.Component {
   }
 
   /**
+   * Публикация в устройство с подписью
+   * @param {Number} serial 
+   * @param {String} topic 
+   * @param {String} value 
+   */
+  publishDev = (item, topic, value) => {
+
+    if (item) {
+      console.log(`publish: [ Hub: ${item.hub}, Serial: ${item.dev}, topic: ${topic}, Value: ${value} ]`)
+      if (this.state.user.hash) {
+        const hmac = sha256.hmac.create(this.state.user.hash)
+        hmac.update(String(value))
+        const sign = Buffer.from(hmac.array()).toString('base64')
+        value = String(value) + '.' + String(sign)
+      }
+
+      this.client.publish(`/${item.hub}/${item.dev}/${topic}`, value.toString())
+    }
+  }
+
+  /**
    * По изменению регистра
    * @param {Number} serial Серийный номер девайса
    * @param {Number} reg Регистр
@@ -310,16 +381,7 @@ class App extends React.Component {
    */
   onChangeReg = (serial, reg, value) => {
     var item = this.state.devices.find((itm) => Number(itm.dev) === serial)
-    console.log(`publish event: [ Hub: ${item.hub}, Serial: ${serial}, Reg: ${reg}, Value: ${value} ]`)
-
-    if (this.state.user.hash) {
-      const hmac = sha256.hmac.create(this.state.user.hash)
-      hmac.update(String(value))
-      const sign = Buffer.from(hmac.array()).toString('base64')
-      value = String(value) + '.' + String(sign)
-    }
-
-    this.client.publish(`/${item.hub}/${serial}/${reg}`, value.toString())
+    this.publishDev(item, String(reg), String(value))
   }
 
   /**
@@ -328,82 +390,151 @@ class App extends React.Component {
    */
   render() {
     const TblHdr = [{
+      enable: true,
       key: "alive",
       fieldName: "alive",
       name: <Icon iconName="PlugConnected" style={{ fontSize: "20px" }} />,
       minWidth: 22,
       maxWidth: 22,
     }, {
+      enable: true,
       key: "hub",
       fieldName: "hub",
       name: "MAC адрес HUB",
       minWidth: 64,
-      maxWidth: 480,
+      maxWidth: 128,
       isPadded: true,
       isResizable: true,
       onRender: (val) => {
-        return <div className="dtListCell">{val.hub}</div>
+        return <div className={contentStyles.dtListCell}>{val.hub}</div>
       }
     }, {
+      enable: true,
       key: "dev",
       fieldName: "dev",
       name: "Серийный номер",
       minWidth: 64,
-      maxWidth: 240,
+      maxWidth: 128,
       isPadded: true,
       isResizable: true,
       onRender: (val) => {
-        return <div className="dtListCell">{val.dev}</div>
+        return <div className={contentStyles.dtListCell}>{val.dev}</div>
       }
-    },
-    {
+    }, {
+      enable: true,
       key: "lqi",
       fieldName: "lqi",
       name: "Уровень сигнала",
       minWidth: 64,
-      maxWidth: 240,
+      maxWidth: 128,
       isPadded: true,
       isResizable: true,
       onRender: (val) => {
-        return <div className="dtListCell">{val.lqi}</div>
+        return <div className={contentStyles.dtListCell}>{val.lqi}</div>
       }
     }, {
+      enable: true,
+      key: "version",
+      fieldName: "version",
+      name: "Версия",
+      minWidth: 64,
+      maxWidth: 360,
+      isPadded: true,
+      isResizable: true,
+      onRender: (val) => {
+        if (val.version) {
+          return <div className={contentStyles.dtListCell}>{val.version}</div>
+        }
+        return <div className={contentStyles.dtListCell}> <IconButton
+          iconProps={{ iconName: "Refresh" }}
+          aria-label="Refresh"
+          onClick={() => {
+            this.publishDev(val, 'version', 'version')
+            this.setMsg({
+              type: MessageBarType.info,
+              text: "Запрос на получения версии устройства отправлен"
+            })
+          }} /></div>
+      }
+    }, {
+      enable: true,
+      key: "type",
+      fieldName: "type",
+      name: "Тип устройства",
+      minWidth: 64,
+      maxWidth: 128,
+      isPadded: true,
+      isResizable: true,
+      onRender: (val) => {
+        if (val.type) {
+          return <div className={contentStyles.dtListCell}>{val.type}</div>
+        }
+        return <div className={contentStyles.dtListCell}>
+          <IconButton
+            iconProps={{ iconName: "Refresh" }}
+            aria-label="Refresh"
+            onClick={() => {
+              this.client.publish(`/${val.hub}/error`, "3")
+              this.setMsg({
+                type: MessageBarType.info,
+                text: "Запрос на получения типа устройства отправлен"
+              })
+            }}
+          />
+        </div>
+      }
+    }, {
+      enable: true,
       key: "regTime",
       fieldName: "regTime",
       name: "Время регистрации",
       minWidth: 64,
-      maxWidth: 240,
+      maxWidth: 128,
       isPadded: true,
       isResizable: true,
       onRender: (dt) => {
         if (dt.regTime !== ' - ') {
-          return <div className="dtListCell">{new Date(dt.regTime).toLocaleTimeString('ru-RU')}</div>
+          return <div className={contentStyles.dtListCell}>{new Date(dt.regTime).toLocaleString('ru-RU')}</div>
         }
-        return <div className="dtListCell">{dt.regTime}</div>
+        return <div className={contentStyles.dtListCell}>
+          <IconButton
+            iconProps={{ iconName: "Refresh" }}
+            aria-label="Refresh"
+            onClick={() => {
+              this.client.publish(`/${dt.hub}/error`, "3")
+              this.setMsg({
+                type: MessageBarType.info,
+                text: "Запрос на получения время регистрации отправлен"
+              })
+            }}
+          />
+        </div>
       }
     }, {
+      enable: true,
       key: "lastMsgTime",
       fieldName: "lastMsgTime",
       name: "Последнее сообщение",
       minWidth: 64,
-      maxWidth: 240,
+      maxWidth: 136,
       isPadded: true,
       isResizable: true,
       onRender: (dt) => {
-        return <div className="dtListCell">{new Date(dt.lastMsgTime).toLocaleTimeString('ru-RU')}</div>
+        return <div className={contentStyles.dtListCell}>{new Date(dt.lastMsgTime).toLocaleString('ru-RU')}</div>
       }
     }, {
+      enable: true,
       key: "status",
       fieldName: "status",
       name: "Количество событий",
       minWidth: 64,
-      maxWidth: 240,
+      maxWidth: 128,
       isPadded: true,
       isResizable: true,
       onRender: (val) => {
-        return <div className="dtListCell">{val.status}</div>
+        return <div className={contentStyles.dtListCell}>{val.status}</div>
       }
-    }]
+    }];
 
     return <div>
       {
@@ -416,6 +547,8 @@ class App extends React.Component {
           </MessageBar>
           : ''
       }
+
+
 
       <Stack style={{ marginLeft: "4pt" }} horizontal reversed>
         <Stack.Item style={{ marginRight: "4pt" }} >
@@ -442,6 +575,42 @@ class App extends React.Component {
           <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center" >
             <small>{this.state.user.login} ({Buffer.from(this.state.user.hash).toString('hex').substring(0, 8)})</small>
           </Stack.Item> : ''}
+
+        <Stack.Item  style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center">
+          <Link ref={this.tblColsMenuLinkRef} onClick={() => {
+            this.setState({ tblColsMenuShow: true })
+          }}
+            style={{
+              fontSize: "8pt"
+            }}
+          >Столбцы</Link>
+
+          <ContextualMenu
+            items={
+              TblHdr.map((v, i) => {
+                return {
+                  key: v.key,
+                  text: <Toggle
+                    label={v.name}
+                    inlineLabel
+                    checked={this.state.devCols[i]}
+                    onChange={(evt, checked) => {
+                      this.setState((state, props) => {
+                        state.devCols[i] = checked
+                        return state
+                      })
+                    }}
+                  />
+                }
+              })
+            }
+            target={this.tblColsMenuLinkRef}
+            hidden={!this.state.tblColsMenuShow}
+            onDismiss={() => {
+              this.setState({ tblColsMenuShow: false })
+            }}
+          />
+        </Stack.Item>
         <Stack.Item grow disableShrink >&nbsp;</Stack.Item>
         <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center" >
           <small>Количество устройств: <b>{this.state.devices.length}</b> </small>
@@ -471,13 +640,16 @@ class App extends React.Component {
       <DetailsList
         setKey={"devices"}
         items={this.state.devices}
-        columns={TblHdr}
+        columns={TblHdr.filter((obj, idx) => {
+          return this.state.devCols[idx]
+        })}
         selectionMode={SelectionMode.none}
         checkboxVisibility={false}
         onRenderRow={this.tblRenderRow}
         onItemInvoked={this.onShowDevWindow}
         compact
       />
+
       <div className="ftr">
         <p style={{ fontSize: FontSizes.size10 }} >Версия: {ver}</p>
       </div>

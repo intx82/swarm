@@ -32,23 +32,7 @@ export const DevForm = (props) => {
      * @returns 
      */
     function ISODateString(date) {
-      let time = new Date(date * 1000);
-      function pad(n) {
-        return n < 10 ? "0" + n : n;
-      }
-      return (
-        time.getUTCFullYear() +
-        "-" +
-        pad(time.getUTCMonth() + 1) +
-        "-" +
-        pad(time.getUTCDate()) +
-        " " +
-        pad(time.getUTCHours()) +
-        ":" +
-        pad(time.getUTCMinutes()) +
-        ":" +
-        pad(time.getUTCSeconds())
-      );
+      return new Date(date * 1000).toLocaleString('ru-RU');
     }
 
     /**
