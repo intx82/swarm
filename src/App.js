@@ -48,7 +48,7 @@ class App extends React.Component {
         pwd: null,
         hash: null
       },
-      devCols: [true, true, true, true, true, true, true, true],
+      devCols: [true, true, true, true, true, true, true, true, true],
       tblColsMenuShow: false
     };
     this.tblColsMenuLinkRef = React.createRef();
