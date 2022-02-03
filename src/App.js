@@ -19,7 +19,8 @@ initializeIcons();
 
 var mqtt = require('mqtt');
 var options = {
-  protocol: 'ws'
+  protocol: 'wss',
+  rejectUnauthorized: false
 };
 
 
@@ -60,7 +61,7 @@ class App extends React.Component {
    * Монтирует компонент - подключается к брокеру
    */
   componentDidMount() {
-    this.client = mqtt.connect('mqtt://x.ks.ua:9001', options);
+    this.client = mqtt.connect('wss://swarm.x.ks.ua:9001', options);
     this.client.on('message', this.onMessage);
     this.client.on('error', this.onError)
     this.client.on('connect', this.onConnect)
