@@ -247,6 +247,8 @@ class App extends React.Component {
       devIdx = devs.findIndex((itm) => itm.hub === hub)
       if (devIdx !== -1) {
         devs[devIdx].status = Number(message.toString())
+      } else {
+        this.client.publish(`/${hub}/error`, "3")
       }
     }
 
@@ -625,6 +627,7 @@ class App extends React.Component {
         <DevForm
           devDesc={devDesc}
           regValues={this.state.DevRegs['regs']}
+          status={this.state.DevRegs['status']}
           readOnly={this.state.DevRegs['auth'] & !(!!this.state.user.hash)}
           isOpen={this.state.DevRegs !== null}
           onCancel={this.onCloseDevWindow}
