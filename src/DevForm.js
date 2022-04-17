@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Pivot, PivotItem, Label, ComboBox, PrimaryButton,Stack, StackItem } from "@fluentui/react";
+import { Pivot, PivotItem, Label } from "@fluentui/react";
 import { Window } from "./Window";
 import { DevMainCtrls } from "./DevMainCtrls";
+import { DevFw } from "./DevFw";
 
 /**
  * Основная форма устройства
@@ -16,7 +17,6 @@ export const DevForm = (props) => {
   const devStatus = 'status' in props.devState ? props.devState.status : 0
   const devReadOnly = props.devState['auth'] & !(!!props.user.hash)
   const updater = props.updater ? props.updater : {}
-  const [ver, branch, commit] = props.devState.version ? props.devState.version.toString().split(';', 3) : [devReadOnly ? 'Для получение версии необходима авторизация' : 'Ошибка получения версии', '', '']
   const devDesc = props.devDesc.hasOwnProperty(devType) ? props.devDesc[devType] : props.devDesc['unknown']
 
   const onLinkClick = (pivotItem) => {
@@ -26,7 +26,7 @@ export const DevForm = (props) => {
   }
 
   const getVersion = () => {
-    if (!devReadOnly && typeof props.getVersion === 'function') {
+    if (!devReadOnly && typeof props.getVersion === 'function' && !props.devState.version) {
       props.getVersion(props.devState)
     }
   }
@@ -58,23 +58,13 @@ export const DevForm = (props) => {
       {
         devDesc.tabs.fw && devType in updater && updater[devType].length > 0 ?
           <PivotItem headerText="Обновление ПО" itemIcon="FlameSolid" onClick={getVersion}>
-            <Stack>
-              <StackItem><Label>Текущая версия: <b>{ver} {branch} {commit}</b></Label></StackItem>
-
-              {!devReadOnly ?
-                <StackItem style={{marginBottom: '4pt'}}>
-                  <ComboBox
-                    label="Доступные версии ПО устройства:"
-                    selectedKey={updater[devType][updater[devType].length - 1]['r']}
-                    options={updater[devType].map((v, i) => {
-                      return {
-                        key: v['r'],
-                        text: `${v['r']} ${v['b']} ${v['c']} Размер: ${Number.parseInt(v['s']) * 1024} кб`
-                      }
-                    })}
-                  /></StackItem> : ''}
-              {!devReadOnly ? <StackItem align="end"><PrimaryButton text="Записать" /></StackItem> : ''}
-            </Stack>
+            {devRegs ? <DevFw
+              devDesc={devDesc}
+              devState={props.devState}
+              updater={updater}
+              user={props.user}
+              onFwUpd={props.onFwUpd}
+            /> : ""}
           </PivotItem> : ""
       }
     </Pivot>

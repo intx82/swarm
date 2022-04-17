@@ -84,6 +84,44 @@ class App extends React.Component {
   }
 
   /**
+   * По старту обновления прошивки устройства
+   * @param {*} dev Описание устройства
+   * @param {*} fw Описание прошивки
+   * @param {*} user Описание пользователя
+   * @param {*} setProgress Коллбек для установки прогресса
+   */
+  onFwUpd = (dev, fw, user, setProgress) => {
+    console.log('fwStartUpd: ', dev, fw, user)
+
+    const devs = this.state.devices
+    const devIdx = devs.findIndex((itm) => itm.hub === dev.hub)
+
+    let progress = 0
+    const _onTimeout = () => {
+      setProgress(progress)
+
+      this.setState((state) => {
+        state.devices[devIdx].updState = { 'p': progress, 's': Number(fw['s']) }
+        return state
+      })
+
+      progress += 1
+      if (progress <= Number(fw['s'])) {
+        setTimeout(_onTimeout, 25)
+      }
+      else {
+        this.setState((state) => {
+          state.devices[devIdx].updState = null;
+          state.devices[devIdx].version = null;
+          return state;
+        })
+      }
+    }
+
+    setTimeout(_onTimeout, 25)
+  }
+
+  /**
    * Показывает сообщение
    * @param {*} msg Текст сообщения
    * @param {*} timeout Таймаут 
@@ -192,8 +230,8 @@ class App extends React.Component {
    */
   onMessage = (topic, message) => {
 
-    if (topic.toString().startsWith(UPDATER_TOPIC)) {
-      let [,, type] = topic.toString().split('/', 4)
+    if (topic.toString().startsWith(`${UPDATER_TOPIC}list`)) {
+      let [, , type] = topic.toString().split('/', 4)
       this.setState((state) => {
         state.updater[type] = JSON.parse(message.toString())
         return state
@@ -220,7 +258,8 @@ class App extends React.Component {
           auth: false,
           mark: false,
           type: null,
-          version: null
+          version: null,
+          updState: null
         }) - 1;
 
         this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
@@ -476,13 +515,25 @@ class App extends React.Component {
       isPadded: true,
       isResizable: true,
       onRender: (val) => {
-        if (val.version) {
-          return <div className={contentStyles.dtListCell}>{val.version}</div>
+        if (!val.updState) {
+          if (val.version) {
+            return <div className={contentStyles.dtListCell}>{val.version}</div>
+          }
+          return <div className={contentStyles.dtListCell}> <IconButton
+            iconProps={{ iconName: "Refresh" }}
+            aria-label="Refresh"
+            onClick={() => this.getVersion(val)} /></div>
         }
-        return <div className={contentStyles.dtListCell}> <IconButton
-          iconProps={{ iconName: "Refresh" }}
-          aria-label="Refresh"
-          onClick={()=>this.getVersion(val)} /></div>
+        else {
+          if (val.updState.s) {
+            const updPercent = Math.round(10000 * (val.updState.p / val.updState.s), 2) / 100
+            return <div
+              className={contentStyles.dtListCell}>Обновление: {`${updPercent}%`}</div>;
+          } else {
+            return <div
+              className={contentStyles.dtListCell}>Обновление: Пакет {`${val.updState.p}`}</div>;
+          }
+        }
       }
     }, {
       enable: true,
@@ -604,7 +655,7 @@ class App extends React.Component {
             <small>{this.state.user.login} ({Buffer.from(this.state.user.hash).toString('hex').substring(0, 8)})</small>
           </Stack.Item> : ''}
 
-        <Stack.Item  style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center">
+        <Stack.Item style={{ marginRight: "4pt", marginLeft: "4pt" }} align="center">
           <Link ref={this.tblColsMenuLinkRef} onClick={() => {
             this.setState({ tblColsMenuShow: true })
           }}
@@ -654,6 +705,7 @@ class App extends React.Component {
           devState={this.state.DevRegs}
           onCancel={this.onCloseDevWindow}
           onChangeReg={this.onChangeReg}
+          onFwUpd={this.onFwUpd}
           updater={this.state.updater}
           user={this.state.user}
           getVersion={this.getVersion}

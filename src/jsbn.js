@@ -860,12 +860,6 @@ function bnDivide(a) { var r = nbi(); this.divRemTo(a, r, null); return r; }
 // (public) this % a
 function bnRemainder(a) { var r = nbi(); this.divRemTo(a, null, r); return r; }
 
-// (public) [this/a,this%a]
-function bnDivideAndRemainder(a) {
-  var q = nbi(), r = nbi();
-  this.divRemTo(a, q, r);
-  return new Array(q, r);
-}
 
 // (protected) this *= n, this >= 0, 1 < n < DV
 function bnpDMultiply(n) {
@@ -1196,7 +1190,6 @@ BigInteger.prototype.subtract = bnSubtract;
 BigInteger.prototype.multiply = bnMultiply;
 BigInteger.prototype.divide = bnDivide;
 BigInteger.prototype.remainder = bnRemainder;
-BigInteger.prototype.divideAndRemainder = bnDivideAndRemainder;
 BigInteger.prototype.modPow = bnModPow;
 BigInteger.prototype.modInverse = bnModInverse;
 BigInteger.prototype.pow = bnPow;
