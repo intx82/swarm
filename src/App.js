@@ -14,6 +14,7 @@ import { LoginForm } from './LoginForm';
 import devDesc from "./devices.json";
 import ver from "./version.json"
 import { sha256 } from "js-sha256"
+import { updater } from "./updater"
 
 initializeIcons();
 
@@ -33,6 +34,9 @@ const contentStyles = mergeStyleSets({
   }
 })
 
+const MQTT_SRV = 'wss://swarm.x.ks.ua:9001'
+const UPDATER_TOPIC = ">updater/"
+
 
 class App extends React.Component {
 
@@ -50,7 +54,8 @@ class App extends React.Component {
         hash: null
       },
       devCols: [true, true, true, true, true, true, true, true, true],
-      tblColsMenuShow: false
+      tblColsMenuShow: false,
+      updater: {}
     };
     this.tblColsMenuLinkRef = React.createRef();
     this.availabilityTmr = null
@@ -61,7 +66,7 @@ class App extends React.Component {
    * Монтирует компонент - подключается к брокеру
    */
   componentDidMount() {
-    this.client = mqtt.connect('wss://swarm.x.ks.ua:9001', options);
+    this.client = mqtt.connect(MQTT_SRV, options);
     this.client.on('message', this.onMessage);
     this.client.on('error', this.onError)
     this.client.on('connect', this.onConnect)
@@ -78,6 +83,11 @@ class App extends React.Component {
     this.client.end()
   }
 
+  /**
+   * Показывает сообщение
+   * @param {*} msg Текст сообщения
+   * @param {*} timeout Таймаут 
+   */
   setMsg = (msg, timeout = 2500) => {
     this.setState((state) => {
       state.msg = msg
@@ -106,6 +116,7 @@ class App extends React.Component {
     })
 
     this.client.subscribe('/#');
+    this.client.subscribe(UPDATER_TOPIC + "list/#");
   }
 
   /**
@@ -180,6 +191,15 @@ class App extends React.Component {
    * @param {*} message 
    */
   onMessage = (topic, message) => {
+
+    if (topic.toString().startsWith(UPDATER_TOPIC)) {
+      let [,, type] = topic.toString().split('/', 4)
+      this.setState((state) => {
+        state.updater[type] = JSON.parse(message.toString())
+        return state
+      })
+      return;
+    }
 
     let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
     let devs = this.state.devices
@@ -388,6 +408,17 @@ class App extends React.Component {
   }
 
   /**
+   * Отправляет запрос на получение версии
+   */
+  getVersion = (val) => {
+    this.publishDev(val, 'version', 'version')
+    this.setMsg({
+      type: MessageBarType.info,
+      text: "Запрос на получения версии устройства отправлен"
+    })
+  }
+
+  /**
    * Отрисовывает происходящее
    * @returns 
    */
@@ -451,13 +482,7 @@ class App extends React.Component {
         return <div className={contentStyles.dtListCell}> <IconButton
           iconProps={{ iconName: "Refresh" }}
           aria-label="Refresh"
-          onClick={() => {
-            this.publishDev(val, 'version', 'version')
-            this.setMsg({
-              type: MessageBarType.info,
-              text: "Запрос на получения версии устройства отправлен"
-            })
-          }} /></div>
+          onClick={()=>this.getVersion(val)} /></div>
       }
     }, {
       enable: true,
@@ -626,12 +651,12 @@ class App extends React.Component {
       {this.state.DevRegs !== null ?
         <DevForm
           devDesc={devDesc}
-          regValues={this.state.DevRegs['regs']}
-          status={this.state.DevRegs['status']}
-          readOnly={this.state.DevRegs['auth'] & !(!!this.state.user.hash)}
-          isOpen={this.state.DevRegs !== null}
+          devState={this.state.DevRegs}
           onCancel={this.onCloseDevWindow}
           onChangeReg={this.onChangeReg}
+          updater={this.state.updater}
+          user={this.state.user}
+          getVersion={this.getVersion}
         /> : ''}
 
       {this.state.isLoginOpen ?

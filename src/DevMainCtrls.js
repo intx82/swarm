@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import {
-  Slider,
+    Slider,
 } from "@fluentui/react";
 
 import Accordion from "@material-ui/core/Accordion";
@@ -14,17 +14,18 @@ import { Checkbox, Stack } from "@fluentui/react";
  * Конвертирует тип данных в компонент
  * @param {object} item 
  * @param {bool} devReadOnly 
- * @param {props} props
+ * @param {object} regValues
+ * @param {Function} onChangeReg
  * @returns 
  */
-export const DevMainCtrls = (item, devReadOnly, props) => {
+export const DevMainCtrls = (item, devReadOnly, regValues, onChangeReg) => {
     /**
      * Преобразовывает Unixtime
      * @param {date} date 
      * @returns 
      */
     function ISODateString(date) {
-      return new Date(date * 1000).toLocaleString('ru-RU');
+        return new Date(date * 1000).toLocaleString('ru-RU');
     }
 
     /**
@@ -33,14 +34,14 @@ export const DevMainCtrls = (item, devReadOnly, props) => {
      * @returns 
      */
     const calculate = (inData) => {
-      const bFloat = new Uint8Array([
-        (inData >> 24) & 0xff,
-        (inData >> 16) & 0xff,
-        (inData >> 8) & 0xff,
-        inData & 0xff,
-      ]).buffer;
-      var view = new DataView(bFloat);
-      return view.getFloat32(0, false).toFixed(2)
+        const bFloat = new Uint8Array([
+            (inData >> 24) & 0xff,
+            (inData >> 16) & 0xff,
+            (inData >> 8) & 0xff,
+            inData & 0xff,
+        ]).buffer;
+        var view = new DataView(bFloat);
+        return view.getFloat32(0, false).toFixed(2)
     };
 
     /**
@@ -49,9 +50,9 @@ export const DevMainCtrls = (item, devReadOnly, props) => {
      * @returns 
      */
     const calculateToUint = (inData) => {
-      var tmpBuf = new ArrayBuffer(4);
-      new DataView(tmpBuf).setFloat32(0, inData);
-      return new DataView(tmpBuf).getUint32(0, false);
+        var tmpBuf = new ArrayBuffer(4);
+        new DataView(tmpBuf).setFloat32(0, inData);
+        return new DataView(tmpBuf).getUint32(0, false);
     };
 
     /**
@@ -60,17 +61,17 @@ export const DevMainCtrls = (item, devReadOnly, props) => {
      * @returns 
      */
     const genBit = (arr) => {
-      if (Array.isArray(arr)) {
-        let res = 0;
-        for (let i = 0; i < arr.length; i++) {
-          if (arr[i]) {
-            res |= 1 << i;
-          } else {
-            res &= ~(1 << i);
-          }
+        if (Array.isArray(arr)) {
+            let res = 0;
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i]) {
+                    res |= 1 << i;
+                } else {
+                    res &= ~(1 << i);
+                }
+            }
+            return res;
         }
-        return res;
-      }
     };
 
     /**
@@ -80,99 +81,99 @@ export const DevMainCtrls = (item, devReadOnly, props) => {
      * @returns 
      */
     function testBit(num, bitNum) {
-      return (Number(num) & (1 << bitNum)) === 1 << bitNum;
+        return (Number(num) & (1 << bitNum)) === 1 << bitNum;
     }
 
     if (item.readonly) {
-      if (item.type.name === "unixtime") {
+        if (item.type.name === "unixtime") {
+            return (
+                <h3>
+                    {item.name}: {ISODateString(regValues[item.id])}
+                </h3>
+            );
+        }
         return (
-          <h3>
-            {item.name}: {ISODateString(props.regValues[item.id])}
-          </h3>
+            <h3>
+                {item.name}:{" "}
+                {item.type.name === "int"
+                    ? regValues[item.id]
+                    : calculate(regValues[item.id])}
+            </h3>
         );
-      }
-      return (
-        <h3>
-          {item.name}:{" "}
-          {item.type.name === "int"
-            ? props.regValues[item.id]
-            : calculate(props.regValues[item.id])}
-        </h3>
-      );
     } else if (item.type.name === "int" || item.type.name === "float") {
-      return (
-        <Slider
-          label={item.name}
-          min={item.type.minimum}
-          max={item.type.maximum}
-          disabled={devReadOnly}
-          value={
-            item.type.name === "int"
-              ? props.regValues[item.id]
-              : calculate(props.regValues[item.id])
-          }
-          step={item.type.step > 0 ? item.type.step : 1}
-          onChange={(val) => {
-            if (typeof props.onChangeReg === "function") {
-              props.onChangeReg(
-                props.regValues[0],
-                item.id,
-                calculateToUint(val)
-              );
-            }
-          }}
-          showValue
-        />
-      );
-    } else if (item.type.name === "unixtime") {
-      return (
-        <p>
-          {item.name}: {ISODateString(props.regValues[item.id])}
-        </p>
-      );
-    } else if (item.type.name === "bitfield") {
-      return (
-        <Accordion style={{ marginTop: "20px" }}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1a-content"
-            id="panel1a-header"
-          >
-            {" "}
-            <h3 className="openAcc">{item.name}</h3>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack tokens={{ childrenGap: 10 }}>
-              {item.type.bits.map((obj, index) => {
-                let arr = [];
-
-                for (let i = 0; i < 32; i++) {
-                  arr.push(testBit(props.regValues[item.id], i));
+        return (
+            <Slider
+                label={item.name}
+                min={item.type.minimum}
+                max={item.type.maximum}
+                disabled={devReadOnly}
+                value={
+                    item.type.name === "int"
+                        ? regValues[item.id]
+                        : calculate(regValues[item.id])
                 }
-
-                const rIdx = item.type.bits[index].id
-                return (
-                  <Checkbox
-                    label={obj.name}
-                    disabled={obj.readonly || devReadOnly}
-                    key={`checkbox ${rIdx}`}
-                    checked={testBit(props.regValues[item.id], rIdx)}
-                    onChange={(val) => {
-                      arr[rIdx] = !arr[rIdx];
-                      if (typeof props.onChangeReg === "function") {
-                        props.onChangeReg(
-                          props.regValues[0],
-                          item.id,
-                          genBit(arr)
+                step={item.type.step > 0 ? item.type.step : 1}
+                onChange={(val) => {
+                    if (typeof onChangeReg === "function") {
+                        onChangeReg(
+                            regValues[0],
+                            item.id,
+                            calculateToUint(val)
                         );
-                      }
-                    }}
-                  />
-                );
-              })}
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
-      );
+                    }
+                }}
+                showValue
+            />
+        );
+    } else if (item.type.name === "unixtime") {
+        return (
+            <p>
+                {item.name}: {ISODateString(regValues[item.id])}
+            </p>
+        );
+    } else if (item.type.name === "bitfield") {
+        return (
+            <Accordion style={{ marginTop: "20px" }}>
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    aria-controls="panel1a-content"
+                    id="panel1a-header"
+                >
+                    {" "}
+                    <h3 className="openAcc">{item.name}</h3>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Stack tokens={{ childrenGap: 10 }}>
+                        {item.type.bits.map((obj, index) => {
+                            let arr = [];
+
+                            for (let i = 0; i < 32; i++) {
+                                arr.push(testBit(regValues[item.id], i));
+                            }
+
+                            const rIdx = item.type.bits[index].id
+                            return (
+                                <Checkbox
+                                    label={obj.name}
+                                    disabled={obj.readonly || devReadOnly}
+                                    key={`checkbox ${rIdx}`}
+                                    checked={testBit(regValues[item.id], rIdx)}
+                                    onChange={(val) => {
+                                        arr[rIdx] = !arr[rIdx];
+                                        if (typeof onChangeReg === "function") {
+                                            onChangeReg(
+                                                regValues[0],
+                                                item.id,
+                                                genBit(arr)
+                                            );
+                                        }
+                                    }}
+                                />
+                            );
+                        })}
+                    </Stack>
+                </AccordionDetails>
+            </Accordion>
+        );
     }
-  };
+};

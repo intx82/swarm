@@ -21,7 +21,12 @@
                     "name": "unixtime"
                 }
             }
-        ]
+        ],
+        "tabs": {
+            "users": false,
+            "events": false,
+            "fw": false
+        }
     },
     "0": {
         "name": "Ожидание типа устройства..",
@@ -45,7 +50,12 @@
                     "name": "unixtime"
                 }
             }
-        ]
+        ],
+        "tabs": {
+            "users": false,
+            "events": false,
+            "fw": false
+        }
     },
     "48": {
         "name": "Терморегулятор LTC-030",
@@ -289,7 +299,12 @@
                     "maximum": 4294967296
                 }
             }
-        ]
+        ], 
+        "tabs": {
+            "users": true,
+            "events": true,
+            "fw": true
+        }
     },
     "112": {
         "name": "Терморегулятор LTC-070",
@@ -533,7 +548,12 @@
                     "maximum": 4294967296
                 }
             }
-        ]
+        ],
+        "tabs": {
+            "users": true,
+            "events": true,
+            "fw": true
+        }
     },
     "144": {
         "name": "Терморегулятор LTC-090",
@@ -777,7 +797,12 @@
                     "maximum": 4294967296
                 }
             }
-        ]
+        ],
+        "tabs": {
+            "users": true,
+            "events": true,
+            "fw": true
+        }
     },
     "1024": {
         "name": "Солнечная панель",
@@ -834,6 +859,11 @@
                     "maximum": 120.0
                 }
             }
-        ]
+        ],
+        "tabs": {
+            "users": true,
+            "events": true,
+            "fw": false
+        }
     }
 }

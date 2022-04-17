@@ -17,6 +17,15 @@ import { DefaultButton } from "@fluentui/react/lib/Button";
  */
 export const Window = (props) => {
   const titleId = useId("title");
+  const modalStyle = mergeStyleSets({
+    container: {
+      display: "flex",
+      flexFlow: "column nowrap",
+      alignItems: "stretch",
+      width: 'width' in props ? props.width : '480pt'
+    },
+  });
+
   return (
     <Modal
       titleAriaId={titleId}
@@ -26,7 +35,8 @@ export const Window = (props) => {
           ? props.onCancel
           : () => console.log("Cancel")
       }
-      containerClassName={contentStyles.container}
+      containerClassName={modalStyle.container}
+      style={{width: '640pt'}}
     >
       <div className={contentStyles.header}>
         <span id={titleId}>{props.title}</span>
@@ -66,12 +76,7 @@ const theme = getTheme();
 const cancelIcon = { iconName: "Cancel" };
 
 const contentStyles = mergeStyleSets({
-  container: {
-    display: "flex",
-    flexFlow: "column nowrap",
-    alignItems: "stretch",
-    width: "480pt",
-  },
+ 
   iconButtonStyles: {
     color: "#333333",
     marginLeft: "auto",
