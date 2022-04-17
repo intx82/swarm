@@ -108,4 +108,32 @@ describe('updater', () => {
     expect(sharedB.toString(16) === sharedA.toString(16)).toBe(true)
   });
 
+
+  test('composeMsg', ()=> {
+    const ret = updater.composeMsg('d62056121cb6e2776ad31bb1b344231ec4681f72', 'fb81c4cc20a3d5d1c700b89c4ebaecf786ea76c0518c7592119b6949f912d44e')
+    expect(typeof ret).toBe('string')
+    console.log('Compose msg: ',ret)
+    expect(ret).toBe('{"u":"+4HEzCCj1dHHALicTrrs94bqdsBRjHWSEZtpSfkS1E4=","c":"1iBWEhy24ndq0xuxs0QjHsRoH3I="}')
+  });
+
+
+  test('encryptMsg', ()=> {
+    const shared =  new BigInteger('bdcc25073a7ef17edf80f4dbf571f0a8af50d1200dd5e75dae866065255ab71c', 16)
+    const msg = '{"u": "+4HEzCCj1dHHALicTrrs94bqdsBRjHWSEZtpSfkS1E4=", "c": "1iBWEhy24ndq0xuxs0QjHsRoH3I="}'
+    const ret = updater.encryptMsg(msg, shared)
+    // enc-msg-b64: +TGvAm7726fwzGNStXtvD3h80S+Sf8TTSLgC1n4Z5h4+XhQT7VcAtJA8awcCMoqZuk2CThyvcSf6bREdXxuAJWlAkyFUuhw25YM0Zb17mdJfjwhy2Dv2xR9r
+    console.log('Encrypted msg: ',ret)
+    expect(typeof ret).toBe('string')
+    expect(ret).toBe('+TGvAm7726fwzGNStXtvD3h80S+Sf8TTSLgC1n4Z5h4+XhQT7VcAtJA8awcCMoqZuk2CThyvcSf6bREdXxuAJWlAkyFUuhw25YM0Zb17mdJfjwhy2Dv2xR9r')
+  })
+
+  test('decryptMsg',()=> {
+    const shared =  new BigInteger('bdcc25073a7ef17edf80f4dbf571f0a8af50d1200dd5e75dae866065255ab71c', 16)
+    const msg = '+TGvAm7726fwzGNStXtvD3h80S+Sf8TTSLgC1n4Z5h4+XhQT7VcAtJA8awcCMoqZuk2CThyvcSf6bREdXxuAJWlAkyFUuhw25YM0Zb17mdJfjwhy2Dv2xR9r'
+    const ret = updater.decryptMsg(msg, shared)
+    console.log('Decrypted msg: ',ret)
+    expect(typeof ret).toBe("string") 
+    expect(ret).toBe('{"u": "+4HEzCCj1dHHALicTrrs94bqdsBRjHWSEZtpSfkS1E4=", "c": "1iBWEhy24ndq0xuxs0QjHsRoH3I="}')
+  })
+
 });

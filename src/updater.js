@@ -1,4 +1,4 @@
-import { aesjs } from "aes-js"
+import aesjs  from "aes-js"
 import BigInteger from "./jsbn"
 
 
@@ -57,6 +57,18 @@ import BigInteger from "./jsbn"
     }
 
     /**
+     * Compose message from commit and user-id
+     * @param {*} commit 
+     * @param {*} userid 
+     */
+    function composeMsg(commit, userid) {
+        return JSON.stringify({
+            "u": Buffer.from(userid, 'hex').toString('base64'),
+            "c": Buffer.from(commit, 'hex').toString('base64')
+        })
+    }
+
+    /**
      * Encrypt AES
      * 
      * @param {Uint8Array} msg
@@ -81,7 +93,7 @@ import BigInteger from "./jsbn"
      */
     function decryptAES(msg, key, nonce = AES_NONCE) {
         var aesCtr = new aesjs.ModeOfOperation.ctr(key, new aesjs.Counter(nonce));
-        return aesCtr.decrypt(msg);
+        return Buffer.from(aesCtr.decrypt(msg)).toString()
     }
 
     /**
@@ -90,19 +102,11 @@ import BigInteger from "./jsbn"
      * @returns 
      */
     function convertKey(val) {
-        function bnToHex(bn) {
-            var base = 16;
-            var hex = BigInt(bn).toString(base);
-            if (hex.length % 2) {
-                hex = '0' + hex;
-            }
-            return hex;
-        }
 
         const fromHexString = hexString =>
             new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
-        return fromHexString(bnToHex(val)).filter((v, i, a) => {
+        return fromHexString(val.toString(16)).filter((v, i, a) => {
             return (i % 2) === 1;
         });
     }
@@ -114,7 +118,7 @@ import BigInteger from "./jsbn"
      * @returns 
      */
     function encryptMsg(msg, shared) {
-        return window.atob(encryptAES(msg, convertKey(shared)))
+        return Buffer.from(encryptAES(msg, convertKey(shared))).toString('base64')
     }
 
     /**
@@ -124,7 +128,7 @@ import BigInteger from "./jsbn"
      * @returns 
      */
     function decryptMsg(msg, shared) {
-        return window.btoa(decryptAES(msg, convertKey(shared)))
+        return decryptAES(Buffer.from(msg, 'base64'), convertKey(shared))
     }
 
 
@@ -138,7 +142,8 @@ import BigInteger from "./jsbn"
         encryptMsg: encryptMsg,
         decryptMsg: decryptMsg,
         b642key: b642key,
-        key2b64: key2b64
+        key2b64: key2b64,
+        composeMsg: composeMsg
     };
 
     // node.js
