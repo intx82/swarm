@@ -333,7 +333,11 @@ class App extends React.Component {
           lqi: 0,
           lastMsgTime: Date.now(),
           mark: false,
-          regs: new Array(20).fill(0)
+          regs: new Array(20).fill(0),
+          auth: false,
+          type: null,
+          version: null,
+          updState: null
         })
         this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
       } else {
