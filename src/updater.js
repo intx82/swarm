@@ -1,11 +1,9 @@
 import aesjs from "aes-js"
 import BigInteger from "./jsbn"
 
-
 const P = new BigInteger("e9a67a666a6e27bc1e6c7fb0add5a0a290c3f69510515259a3c6a4338125c929", 16)
 const G = new BigInteger("858cb1d817b6b0ed1b3d5ae77f3ce04a19c9547eb4140104fe7ccd619dfc29ea", 16)
 const AES_NONCE = new Uint8Array([0x13, 0x0c, 0x95, 0xab, 0x27, 0x7f, 0x04, 0x6f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-
 
 class updater {
 
@@ -103,7 +101,6 @@ class updater {
      * @returns 
      */
     static convertKey(val) {
-
         const fromHexString = hexString =>
             new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 

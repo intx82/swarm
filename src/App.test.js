@@ -40,7 +40,6 @@ describe('jsbn', () => {
 });
 
 describe('updater', () => {
-
   /**
    * privA: 69d1dc0c167eef0791c29f8912cce27e15435aa63e4f47db0e391fd09a26180d pubA: 7871cf79920f85aaf7da03e71b84227f267e6c3af38f23f4287d5cf94fdbd001 pub-b64: eHHPeZIPhar32gPnG4QifyZ+bDrzjyP0KH1c+U/b0AE=
    * privB: 1e741f9638b6fdbf89b0f30f3358ba89d9de1dbc08b66cf8b2e6e5e84287feee pubB: 56421a431645c818b18ad70a90e81b6d2fd99cf960f885c52f76b69ad647a528, pub-b64: VkIaQxZFyBixitcKkOgbbS/ZnPlg+IXFL3a2mtZHpSg=
@@ -48,7 +47,6 @@ describe('updater', () => {
    * enc-msg-b64: +TGvAm7726fwzGNStXtvD3h80S+Sf8TTSLgC1n4Z5h4+XhQT7VcAtJA8awcCMoqZuk2CThyvcSf6bREdXxuAJWlAkyFUuhw25YM0Zb17mdJfjwhy2Dv2xR9r
    * orig-msg: {"u": "+4HEzCCj1dHHALicTrrs94bqdsBRjHWSEZtpSfkS1E4=", "c": "1iBWEhy24ndq0xuxs0QjHsRoH3I="} ('d62056121cb6e2776ad31bb1b344231ec4681f72', b'\xfb\x81\xc4\xcc \xa3\xd5\xd1\xc7\x00\xb8\x9cN\xba\xec\xf7\x86\xeav\xc0Q\x8cu\x92\x11\x9biI\xf9\x12\xd4N')
    */
-
 
   test('genPrivKey', () => {
     GetRandomValuesMock()
@@ -99,7 +97,6 @@ describe('updater', () => {
     console.log('Shared A:', sharedA.toString(16))
     expect(sharedA.toString(16) === 'bdcc25073a7ef17edf80f4dbf571f0a8af50d1200dd5e75dae866065255ab71c').toBe(true)
 
-
     const sharedB = updater.calcSharedKey(updater.b642key(pubAb64), privKeyB)
     expect(typeof sharedB).toBe("object")
     console.log('Shared B:', sharedB.toString(16))
@@ -108,14 +105,12 @@ describe('updater', () => {
     expect(sharedB.toString(16) === sharedA.toString(16)).toBe(true)
   });
 
-
   test('composeMsg', ()=> {
     const ret = updater.composeMsg('d62056121cb6e2776ad31bb1b344231ec4681f72', 'fb81c4cc20a3d5d1c700b89c4ebaecf786ea76c0518c7592119b6949f912d44e')
     expect(typeof ret).toBe('string')
     console.log('Compose msg: ',ret)
     expect(ret).toBe('{"u":"+4HEzCCj1dHHALicTrrs94bqdsBRjHWSEZtpSfkS1E4=","c":"1iBWEhy24ndq0xuxs0QjHsRoH3I="}')
   });
-
 
   test('encryptMsg', ()=> {
     const shared =  new BigInteger('bdcc25073a7ef17edf80f4dbf571f0a8af50d1200dd5e75dae866065255ab71c', 16)

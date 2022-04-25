@@ -16,7 +16,7 @@ export const DevForm = (props) => {
   const devType = devRegs !== null ? devRegs[15] : 0
   const devStatus = 'status' in props.devState ? props.devState.status : 0
   const devReadOnly = props.devState['auth'] & !(!!props.user.hash)
-  const updater = props.updater ? props.updater : {}
+  const fwList = props.fwList ? props.fwList : {}
   const devDesc = props.devDesc.hasOwnProperty(devType) ? props.devDesc[devType] : props.devDesc['unknown']
 
   const onLinkClick = (pivotItem) => {
@@ -56,12 +56,12 @@ export const DevForm = (props) => {
           </PivotItem> : ""
       }
       {
-        devDesc.tabs.fw && devType in updater && updater[devType].length > 0 ?
+        devDesc.tabs.fw && devType in fwList && fwList[devType].length > 0 ?
           <PivotItem headerText="Обновление ПО" itemIcon="FlameSolid" onClick={getVersion}>
             {devRegs ? <DevFw
               devDesc={devDesc}
               devState={props.devState}
-              updater={updater}
+              fwList={fwList}
               user={props.user}
               onFwUpd={props.onFwUpd}
             /> : ""}
