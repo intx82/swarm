@@ -113,6 +113,7 @@ class FwUpd {
                 setTimeout(step, 50);
             } else {
                 this._state = FwUpd.UPD_STATE_IDLE
+                this._onChunkWr(dev, fw, null)
             }
         };
 

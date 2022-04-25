@@ -1,7 +1,7 @@
 
 
 import * as React from "react";
-import { ComboBox, Stack, StackItem, Label, PrimaryButton, ProgressIndicator } from "@fluentui/react";
+import { ComboBox, Stack, StackItem, Label, PrimaryButton, ProgressIndicator, Link } from "@fluentui/react";
 
 
 /**
@@ -14,7 +14,7 @@ export const DevFw = (props) => {
     const devType = devRegs !== null ? devRegs[15] : 0
     const fwList = props.fwList ? props.fwList : {}
     const devReadOnly = props.devState['auth'] & !(!!props.user.hash)
-    const [ver, branch, commit] = props.devState.version ? props.devState.version.toString().split(';', 3) : [devReadOnly ? 'Для получение версии необходима авторизация' : 'Ошибка получения версии', '', '']
+    const [ver, branch, commit] = props.devState.version ? props.devState.version.toString().split(';', 3) : [devReadOnly ? 'Для получение версии необходима авторизация' : 'Ошибка получения версии', null, null]
 
     const [updProgress, setUpdProgress] = React.useState(props.devState.updState.progress)
 
@@ -47,7 +47,9 @@ export const DevFw = (props) => {
         }
     } else {
         return <Stack>
-            <StackItem><Label>Текущая версия: <b>{ver} {branch} {commit}</b></Label></StackItem>
+            <StackItem> <Label>Текущая версия: {branch && commit ?   <b>{ver} {branch} {commit}</b> : !devReadOnly ? <Link
+                    onClick={() => props.getVersion()} >Получить из устройства</Link> : <b>Для обновления ПО устройства необходима авторизиация</b> 
+            }</Label></StackItem>
             {!devReadOnly ?
                 <StackItem style={{ marginBottom: '4pt' }}>
                     <ComboBox

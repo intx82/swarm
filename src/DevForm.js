@@ -64,6 +64,7 @@ export const DevForm = (props) => {
               fwList={fwList}
               user={props.user}
               onFwUpd={props.onFwUpd}
+              getVersion={()=>getVersion()}
             /> : ""}
           </PivotItem> : ""
       }
