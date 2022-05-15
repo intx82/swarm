@@ -41,6 +41,7 @@ export const DevFw = (props) => {
                 description={`${Math.round(10000 * (updProgress / selectedFw['s']), 2) / 100}% (${updProgress} / ${selectedFw['s']})`}
                 percentComplete={updProgress / selectedFw['s']} />
         } else {
+            setUpdProgress(null);
             return <Label>
                 Перезагрузка устройства и последующение обновление
             </Label>

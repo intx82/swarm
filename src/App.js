@@ -95,6 +95,14 @@ class App extends React.Component {
         }
     }
 
+    onFWUpdErr = (dev, fw, err) => {
+        console.log('FW-UPD error:', err)
+        this.setMsg({
+            text: `Ошибка обновления ${dev.hub} ${err['e']}`,
+            type: MessageBarType.error
+        },5000)
+    }
+
     /**
      * При записи куска в устройство
      * @param {*} dev Описание устройства
@@ -103,7 +111,9 @@ class App extends React.Component {
      */
     onFwUpdChunkWr = (dev, fw, progress) => {
 
-        fw['setProgress'](progress)
+        if ('setProgress' in fw && typeof(fw['setProgress']) === 'function') {
+            fw['setProgress'](progress)
+        }
 
         this.setState((state) => {
             state.devices[dev.idx].version = dev.updState.uiMsg
@@ -213,12 +223,16 @@ class App extends React.Component {
         this.setState({ devices: devs })
     }
 
+
     /**
      * По входящему сообщению
      * @param {*} topic 
      * @param {*} message 
      */
     onMessage = (topic, message) => {
+
+        let devs = this.state.devices
+        let devIdx = -1
 
         if (topic.toString().startsWith(`${UPDATER_TOPIC}list`)) {
             let [, , type] = topic.toString().split('/', 4)
@@ -230,14 +244,19 @@ class App extends React.Component {
         }
 
         if (topic.toString().startsWith(`${UPDATER_TOPIC}run`)) {
-            this.fwUpd.onMsg(topic.toString(), message.toString())
-            return;
+            let [,, hub] = topic.toString().split('/', 3)
+            devIdx = devs.findIndex((itm) => itm.hub === hub)
+            if (devIdx === -1 || !devs[devIdx].updState) {
+                return;
+            }
+
+            devs[devIdx].updState.onMsg(topic, message)
         }
 
 
         let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
-        let devs = this.state.devices
-        let devIdx = -1
+        
+
         if (re.test(topic.toString())) {
             let [, hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
             reg = Number(reg)
@@ -260,7 +279,7 @@ class App extends React.Component {
                 }) - 1;
 
                 devs[devIdx].idx = devIdx
-                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr)
+                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
                 this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
             } else {
                 devs[devIdx].dev = dev
@@ -340,7 +359,7 @@ class App extends React.Component {
                     idx: -1
                 })
 
-                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr)
+                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
                 devs[devIdx].idx = devIdx
                 this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
             } else {
