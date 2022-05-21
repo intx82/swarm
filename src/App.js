@@ -7,6 +7,10 @@ import {
     Link,
     Toggle
 } from "@fluentui/react";
+
+import { instanceOf } from 'prop-types';
+import { withCookies, Cookies } from 'react-cookie';
+
 import { initializeIcons } from '@fluentui/font-icons-mdl2';
 import { FontSizes } from "@fluentui/style-utilities";
 import { DevForm } from './DevForm';
@@ -39,8 +43,15 @@ const UPDATER_TOPIC = ">updater/"
 
 class App extends React.Component {
 
+    static propTypes = {
+        cookies: instanceOf(Cookies).isRequired
+    };
+
     constructor(props) {
         super(props);
+
+        const { cookies } = props;
+
         this.state = {
             devices: [],
             msg: null,
@@ -48,9 +59,9 @@ class App extends React.Component {
             DevRegs: null,
             isLoginOpen: false,
             user: {
-                login: null,
+                login: cookies.get('uid') ? cookies.get('login') : null,
                 pwd: null,
-                hash: null
+                hash: cookies.get('uid') ? Buffer.from(cookies.get('uid'), 'base64') : null
             },
             devCols: [true, true, true, true, true, true, true, true, true],
             tblColsMenuShow: false,
@@ -652,6 +663,9 @@ class App extends React.Component {
                                 document.getElementById("root").style.filter = "blur(3px)"
                                 this.setState({ isLoginOpen: true })
                             } else {
+                                const { cookies } = this.props;
+
+                                cookies.remove('uid')
                                 this.setState({
                                     user: {
                                         login: null,
@@ -751,4 +765,4 @@ class App extends React.Component {
     }
 };
 
-export default App;
+export default withCookies(App);
