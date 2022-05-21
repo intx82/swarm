@@ -204,6 +204,10 @@ function bnToString(b) {
       if (m) r += int2char(d);
     }
   }
+
+  if (r.length % 2) {
+    r = '0' + r
+  }
   return m ? r : "0";
 }
 

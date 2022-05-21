@@ -175,12 +175,17 @@ class FwUpd {
         console.log('Local private key:', this._privKey.toString(16))
         const localPubKey = updater.calcPubKey(this._privKey).toString(16)
         console.log('Local public key:', localPubKey, localPubKey.length)
-        const b64PK = Buffer.from(localPubKey, 'hex').toString('base64')
-        this.pub(this._pubPath, b64PK)
-        this._state = FwUpd.UPD_STATE_DH
-        this._user = user
-        this._progress = 0
-        this._fw = fw
+        try {
+            const b64PK = Buffer.from(localPubKey, 'hex').toString('base64')
+            this.pub(this._pubPath, b64PK)
+            this._state = FwUpd.UPD_STATE_DH
+            this._user = user
+            this._progress = 0
+            this._fw = fw
+        } catch (e) {
+            console.log(e)
+        }
+
     }
 };
 
