@@ -1,14 +1,15 @@
 import * as React from "react";
-import { Pivot, PivotItem, Label } from "@fluentui/react";
+import { Pivot, PivotItem, Label, IconButton } from "@fluentui/react";
 import { Window } from "./Window";
 import { DevMainCtrls } from "./DevMainCtrls";
 import { DevFw } from "./DevFw";
+import { DevChart } from "./DevCharts";
 
 /**
  * Основная форма устройства
- * 
- * @param {*} props 
- * @returns 
+ *
+ * @param {*} props
+ * @returns
  */
 export const DevForm = (props) => {
 
@@ -51,8 +52,12 @@ export const DevForm = (props) => {
       }
       {
         devDesc.tabs.events ?
-          <PivotItem headerText="Графики" itemIcon="Diagnostic">
-            <Label>Графики...</Label>
+          <PivotItem headerText="Графики" itemI con="Diagnostic">
+            <DevChart
+              devDesc={devDesc}
+              devState={props.devState}
+              user={props.user}
+            />
           </PivotItem> : ""
       }
       {
@@ -64,7 +69,7 @@ export const DevForm = (props) => {
               fwList={fwList}
               user={props.user}
               onFwUpd={props.onFwUpd}
-              getVersion={()=>getVersion()}
+              getVersion={() => getVersion()}
             /> : ""}
           </PivotItem> : ""
       }

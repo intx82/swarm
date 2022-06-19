@@ -6,6 +6,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -17,6 +18,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -35,6 +37,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -46,6 +49,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -64,6 +68,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -75,6 +80,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -83,6 +89,7 @@
                 "id": 2,
                 "name": "Пин код",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -94,6 +101,7 @@
                 "id": 3,
                 "name": "Поддерживаемая температура",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -105,6 +113,7 @@
                 "id": 4,
                 "name": "Температура отключения",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -116,6 +125,7 @@
                 "id": 5,
                 "name": "Гистерезис поддерживаемой T°",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -127,6 +137,7 @@
                 "id": 6,
                 "name": "Гистерезис T° отключения",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -138,6 +149,7 @@
                 "id": 7,
                 "name": "Сопротивление проводного датчика",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 100,
@@ -149,6 +161,7 @@
                 "id": 8,
                 "name": "Режим работы",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "bitfield",
                     "bits": [
@@ -204,6 +217,7 @@
                 "id": 9,
                 "name": "Напряжение сети",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -215,6 +229,7 @@
                 "id": 10,
                 "name": "Время работы (SFM) секунды",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 60,
@@ -226,6 +241,7 @@
                 "id": 11,
                 "name": "Текущая мощность",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -237,6 +253,7 @@
                 "id": 12,
                 "name": "Температура основного термометра",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -248,6 +265,7 @@
                 "id": 13,
                 "name": "Температура термометра отключения",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -259,6 +277,7 @@
                 "id": 14,
                 "name": "Часовой пояс",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -269,6 +288,7 @@
             {
                 "id": 15,
                 "name": "Тип устройства",
+                "chart": false,
                 "readonly": true,
                 "type": {
                     "name": "int",
@@ -281,6 +301,7 @@
                 "id": 18,
                 "name": "Номер ошибки",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -292,6 +313,7 @@
                 "id": 19,
                 "name": "Номер последнего события",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -313,6 +335,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -324,6 +347,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -332,6 +356,7 @@
                 "id": 2,
                 "name": "Пин код",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -343,6 +368,7 @@
                 "id": 3,
                 "name": "Поддерживаемая температура",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -354,6 +380,7 @@
                 "id": 4,
                 "name": "Температура отключения",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -365,6 +392,7 @@
                 "id": 5,
                 "name": "Гистерезис поддерживаемой T°",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -376,6 +404,7 @@
                 "id": 6,
                 "name": "Гистерезис T° отключения",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -387,6 +416,7 @@
                 "id": 7,
                 "name": "Сопротивление проводного датчика",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 100,
@@ -398,6 +428,7 @@
                 "id": 8,
                 "name": "Режим работы",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "bitfield",
                     "bits": [
@@ -453,6 +484,7 @@
                 "id": 9,
                 "name": "Напряжение сети",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -464,6 +496,7 @@
                 "id": 10,
                 "name": "Время работы (SFM) секунды",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 60,
@@ -475,6 +508,7 @@
                 "id": 11,
                 "name": "Текущая мощность",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -486,6 +520,7 @@
                 "id": 12,
                 "name": "Температура основного термометра",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -497,6 +532,7 @@
                 "id": 13,
                 "name": "Температура термометра отключения",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -507,7 +543,8 @@
             {
                 "id": 14,
                 "name": "Часовой пояс",
-                "readonly": false,
+                "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -518,6 +555,7 @@
             {
                 "id": 15,
                 "name": "Тип устройства",
+                "chart": false,
                 "readonly": true,
                 "type": {
                     "name": "int",
@@ -530,6 +568,7 @@
                 "id": 18,
                 "name": "Номер ошибки",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -541,6 +580,7 @@
                 "id": 19,
                 "name": "Номер последнего события",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -562,6 +602,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -573,6 +614,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -581,6 +623,7 @@
                 "id": 2,
                 "name": "Пин код",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -592,6 +635,7 @@
                 "id": 3,
                 "name": "Поддерживаемая температура",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -603,6 +647,7 @@
                 "id": 4,
                 "name": "Температура отключения",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0.5,
@@ -614,6 +659,7 @@
                 "id": 5,
                 "name": "Гистерезис поддерживаемой T°",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -625,6 +671,7 @@
                 "id": 6,
                 "name": "Гистерезис T° отключения",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 0.1,
@@ -636,6 +683,7 @@
                 "id": 7,
                 "name": "Сопротивление проводного датчика",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "float",
                     "step": 100,
@@ -647,6 +695,7 @@
                 "id": 8,
                 "name": "Режим работы",
                 "readonly": false,
+                "chart": false,
                 "type": {
                     "name": "bitfield",
                     "bits": [
@@ -693,7 +742,7 @@
                         {
                             "id": 9,
                             "name": "Блокировка панели",
-                            "readonly": true
+                            "readonly": false
                         }
                     ]
                 }
@@ -702,6 +751,7 @@
                 "id": 9,
                 "name": "Напряжение сети",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -713,6 +763,7 @@
                 "id": 10,
                 "name": "Время работы (SFM) секунды",
                 "readonly": false,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 60,
@@ -724,6 +775,7 @@
                 "id": 11,
                 "name": "Текущая мощность",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -735,6 +787,7 @@
                 "id": 12,
                 "name": "Температура основного термометра",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -746,6 +799,7 @@
                 "id": 13,
                 "name": "Температура термометра отключения",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -756,7 +810,8 @@
             {
                 "id": 14,
                 "name": "Часовой пояс",
-                "readonly": false,
+                "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -767,6 +822,7 @@
             {
                 "id": 15,
                 "name": "Тип устройства",
+                "chart": false,
                 "readonly": true,
                 "type": {
                     "name": "int",
@@ -779,6 +835,7 @@
                 "id": 18,
                 "name": "Номер ошибки",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -790,6 +847,7 @@
                 "id": 19,
                 "name": "Номер последнего события",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -811,6 +869,7 @@
                 "id": 0,
                 "name": "Серийный номер",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "int",
                     "step": 0,
@@ -822,6 +881,7 @@
                 "id": 1,
                 "name": "Время регистрации",
                 "readonly": true,
+                "chart": false,
                 "type": {
                     "name": "unixtime"
                 }
@@ -830,6 +890,7 @@
                 "id": 7,
                 "name": "Пинг",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -841,6 +902,7 @@
                 "id": 9,
                 "name": "Напряжение батарей",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -852,6 +914,7 @@
                 "id": 10,
                 "name": "Ток заряда",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -863,6 +926,7 @@
                 "id": 11,
                 "name": "Текущая мощность",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,
@@ -874,6 +938,7 @@
                 "id": 12,
                 "name": "Температура платы",
                 "readonly": true,
+                "chart": true,
                 "type": {
                     "name": "float",
                     "step": 0,

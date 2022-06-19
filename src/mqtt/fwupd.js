@@ -1,9 +1,10 @@
 import updater from "../updater"
+import MqttBase from "./mqtt"
 
 /**
  * Класс отвечающий за логику обновлений
  */
-class FwUpd {
+class FwUpd extends MqttBase  {
 
     static #UPDATER_TOPIC = "updater/"
 
@@ -23,42 +24,22 @@ class FwUpd {
     ]
 
     /**
-     * 
-     * @param {*} client 
-     * @param {*} dev 
-     * @param {*} onChunkWr 
+     *
+     * @param {*} client
+     * @param {*} dev
+     * @param {*} onChunkWr
      */
     constructor(client, dev, onChunkWr, user, onErr) {
-        this.client = client
+        super(client,dev, user)
         this._state = FwUpd.UPD_STATE_IDLE
-        this._dev = dev
         this._fw = {}
         this._progress = 0
         this._size = 0
         this._privKey = null
         this._onChunkWr = onChunkWr
         this._onErr = onErr
-        this._user = user
         this._pubPath = `<${FwUpd.#UPDATER_TOPIC}run/${this._dev.hub}/${this._dev.dev}`
-        this.sub(`>${FwUpd.#UPDATER_TOPIC}run/${this._dev.hub}/${this._dev.dev}`);
-    }
-
-    /**
-     * Публикация сообщения
-     * @param {*} topic 
-     * @param {*} value 
-     * @param {*} qos 
-     */
-    pub = (topic, value, qos = 0) => {
-        this.client.publish(topic, value, { qos: qos })
-    }
-
-    /**
-     * Подписка на сообщения
-     * @param {string} topic 
-     */
-    sub = (topic) => {
-        this.client.subscribe(topic)
+        this.sub(`>${FwUpd.#UPDATER_TOPIC}run/${this._dev.hub}/${this._dev.dev}`, this.hnd);
     }
 
     /**
@@ -90,7 +71,7 @@ class FwUpd {
     }
 
     /**
-     * Отдает текущее состояние обновления 
+     * Отдает текущее состояние обновления
      * @see UPD_STATE_UPLOAD
      * @see UPD_STATE_DH
      * @see UPD_STATE_IDLE
@@ -101,11 +82,11 @@ class FwUpd {
 
     /**
      * По получению сообщения
-     * @param {string} topic 
-     * @param {string} value 
+     * @param {string} topic
+     * @param {string} value
      * @param {function} setProgress
      */
-    onMsg = (topic, value) => {
+    hnd = (topic, value) => {
         value = value.toString()
         if (this._state === FwUpd.UPD_STATE_DH) {
             const _pubKey = updater.b642key(value)
@@ -167,7 +148,7 @@ class FwUpd {
      * @param {*} dev Параметры устройства
      * @param {*} fw Параметры прошивки
      * @param {*} user Параметры пользователя
-     * @param {*} onChunkWr Callback для 
+     * @param {*} onChunkWr Callback для
      */
     start = (dev, fw, user) => {
         this._size = Number(fw['s'])

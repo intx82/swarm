@@ -135,7 +135,7 @@ class App extends React.Component {
     /**
      * @brief Показывает сообщение
      * @param {*} msg Текст сообщения
-     * @param {*} timeout Таймаут 
+     * @param {*} timeout Таймаут
      */
     setMsg = (msg, timeout = 2500) => {
         this.setState((state) => {
@@ -184,7 +184,7 @@ class App extends React.Component {
 
     /**
      * Устанавливает нужную иконку
-     * @param {*} dev Устройство 
+     * @param {*} dev Устройство
      * @param {*} iconName Название иконки
      */
     setDevStatusIcon = (dev, iconName) => {
@@ -217,9 +217,9 @@ class App extends React.Component {
     }
 
     /**
-     * Отмечает колонку о том что было сообщение и 
+     * Отмечает колонку о том что было сообщение и
      * запускает таймер для убирания отметки + в целом обновляет state
-     * @param {*} devs 
+     * @param {*} devs
      * @param {*} dev
      * @param {*} state Состояние
      */
@@ -237,8 +237,8 @@ class App extends React.Component {
 
     /**
      * По входящему сообщению
-     * @param {*} topic 
-     * @param {*} message 
+     * @param {*} topic
+     * @param {*} message
      */
     onMessage = (topic, message) => {
 
@@ -266,8 +266,6 @@ class App extends React.Component {
 
 
         let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
-        
-
         if (re.test(topic.toString())) {
             let [, hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
             reg = Number(reg)
@@ -286,7 +284,8 @@ class App extends React.Component {
                     type: null,
                     version: null,
                     updState: null,
-                    idx: -1
+                    idx: -1,
+                    store: {}
                 }) - 1;
 
                 devs[devIdx].idx = devIdx
@@ -300,6 +299,26 @@ class App extends React.Component {
             devs[devIdx]['regs'][reg] = Number(message.toString().split('.', 2)[0])
             devs[devIdx]['auth'] = message.toString().split('.', 2).length > 1
             console.log(`receive event: [ Hub: ${hub},Serial: ${dev}, reg: ${reg}, value: ${devs[devIdx]['regs'][reg]}, auth: ${devs[devIdx]['auth']} ]`)
+
+            const evt = {
+                'ts': devs[devIdx].lastMsgTime,
+                'r': reg,
+                'v': devs[devIdx]['regs'][reg]
+            }
+
+            if (!(reg in devs[devIdx].store)) {
+                devs[devIdx].store[reg] = [evt]
+            } else {
+                const lTs = devs[devIdx].store[reg][devs[devIdx].store[reg].length - 1]['ts']
+
+                if ((evt['ts'] - lTs) > 60000) {
+                    devs[devIdx].store[reg].push(evt)
+                }
+
+                if (devs[devIdx].store[reg].length > 60) {
+                    devs[devIdx].store[reg].shift()
+                }
+            }
 
             if (reg === 15) {
                 const devType = devs[devIdx]['regs'][15]
@@ -367,10 +386,11 @@ class App extends React.Component {
                     type: null,
                     version: null,
                     updState: null,
-                    idx: -1
+                    idx: -1,
+                    store: {}
                 })
 
-                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
+//                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
                 devs[devIdx].idx = devIdx
                 this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
             } else {
@@ -394,9 +414,9 @@ class App extends React.Component {
 
     /**
      * Отрисовывает столбец
-     * @param {*} props 
-     * @param {*} defaultRender 
-     * @returns 
+     * @param {*} props
+     * @param {*} defaultRender
+     * @returns
      */
     tblRenderRow = (props, defaultRender) => {
         if (props.item.mark) {
@@ -430,10 +450,10 @@ class App extends React.Component {
 
     /**
      * По входу пользователя
-     * 
-     * @param {String} login 
-     * @param {String} pwd 
-     * @param {Uint8Array} hash 
+     *
+     * @param {String} login
+     * @param {String} pwd
+     * @param {Uint8Array} hash
      */
     onLoginUser = (login, pwd, hash) => {
         this.setState({
@@ -452,9 +472,9 @@ class App extends React.Component {
 
     /**
      * Публикация в устройство с подписью
-     * @param {Number} serial 
-     * @param {String} topic 
-     * @param {String} value 
+     * @param {Number} serial
+     * @param {String} topic
+     * @param {String} value
      */
     publishDev = (item, topic, value) => {
 
@@ -495,7 +515,7 @@ class App extends React.Component {
 
     /**
      * Отрисовывает происходящее
-     * @returns 
+     * @returns
      */
     render() {
         const TblHdr = [{
@@ -650,8 +670,6 @@ class App extends React.Component {
                     </MessageBar>
                     : ''
             }
-
-
 
             <Stack style={{ marginLeft: "4pt" }} horizontal reversed>
                 <Stack.Item style={{ marginRight: "4pt" }} >
