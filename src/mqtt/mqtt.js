@@ -79,6 +79,7 @@ class MqttBase {
      * @param {function} onMsg Обработчик
      */
     sub(topic, onMsg) {
+        console.log("Subscribe: ", topic)
         this.client.subscribe(topic)
         this._hnds[topic] = onMsg
     }
@@ -89,6 +90,7 @@ class MqttBase {
      */
     unsub(topic) {
         if (topic in this._hnds) {
+            console.log("Unsubscribe: ", topic)
             this.client.unsubscribe(topic)
             delete this._hnds[topic]
         }

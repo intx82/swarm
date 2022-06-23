@@ -19,6 +19,7 @@ import devDesc from "./devices.json";
 import ver from "./version.json"
 import { sha256 } from "js-sha256"
 import FwUpd from "./mqtt/fwupd"
+import ChartsBase from "./mqtt/charts";
 
 initializeIcons();
 
@@ -241,7 +242,6 @@ class App extends React.Component {
      * @param {*} message
      */
     onMessage = (topic, message) => {
-
         let devs = this.state.devices
         let devIdx = -1
 
@@ -260,10 +260,8 @@ class App extends React.Component {
             if (devIdx === -1 || !devs[devIdx].updState) {
                 return;
             }
-
             devs[devIdx].updState.onMsg(topic, message)
         }
-
 
         let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
         if (re.test(topic.toString())) {
@@ -285,14 +283,22 @@ class App extends React.Component {
                     version: null,
                     updState: null,
                     idx: -1,
-                    store: {}
+                    store: {},
+                    chart: null,
                 }) - 1;
 
                 devs[devIdx].idx = devIdx
-                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
                 this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
             } else {
                 devs[devIdx].dev = dev
+            }
+
+            if (!devs[devIdx].updState) {
+                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
+            }
+
+            if (!devs[devIdx].chart) {
+                devs[devIdx].chart = new ChartsBase(this.client, devs[devIdx], this.state.user)
             }
 
             devs[devIdx]['regs'][0] = Number(dev)
@@ -368,6 +374,17 @@ class App extends React.Component {
             }
         }
 
+        re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/events\\/\\d{1,3}')
+        if (re.test(topic.toString())) {
+            let [, hub] = topic.toString().toString().split('/', 2)
+            console.log("Got stored event: ", topic, message.toString())
+
+            devIdx = devs.findIndex((itm) => itm.hub === hub)
+            if (devIdx !== -1 && devs[devIdx].chart) {
+                devs[devIdx].chart.onMsg(topic, message)
+            }
+        }
+
         re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/time')
         if (re.test(topic.toString())) {
             let [, hub] = topic.toString().toString().split('/', 2)
@@ -387,10 +404,12 @@ class App extends React.Component {
                     version: null,
                     updState: null,
                     idx: -1,
-                    store: {}
+                    store: {},
+                    chart: null,
                 })
 
 //                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
+                console.log('Reg done', devIdx)
                 devs[devIdx].idx = devIdx
                 this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
             } else {
@@ -510,6 +529,16 @@ class App extends React.Component {
         this.setMsg({
             type: MessageBarType.info,
             text: "Запрос на получения версии устройства отправлен"
+        })
+    }
+
+    /**
+     * Очищает список сохраненных событий
+     */
+    clearStore = (devIdx) => {
+        this.setState((st)=>{
+            st.devices[devIdx].store = {}
+            return st
         })
     }
 
@@ -754,6 +783,7 @@ class App extends React.Component {
                     fwList={this.state.fwList}
                     user={this.state.user}
                     getVersion={this.getVersion}
+                    clearStore={this.clearStore}
                 /> : ''}
 
             {this.state.isLoginOpen ?

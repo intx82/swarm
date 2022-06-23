@@ -1,24 +1,11 @@
 
 
 import * as React from "react";
-import { Stack, StackItem, ComboBox } from "@fluentui/react";
-import devDesc from "./devices.json";
-import { Label } from "recharts";
+import { Accordion, AccordionSummary, AccordionDetails } from "@material-ui/core";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+import { Stack, StackItem, ComboBox, Label, Spinner } from "@fluentui/react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-
-
-function genRegsList(type) {
-    if (type in devDesc) {
-        const r = devDesc[type]['regs'].filter(v => v.chart).map(v => {
-            return {
-                key: v.id,
-                text: v.name
-            }
-        })
-        return r
-    }
-    return []
-}
+import ChartsBase from "./mqtt/charts";
 
 
 /**
@@ -26,73 +13,135 @@ function genRegsList(type) {
  * @param {*} props
  * @returns
  */
-export const DevChart = (props) => {
-    const devRegs = props.devState !== null ? props.devState['regs'] : null
-    const devType = devRegs !== null ? devRegs[15] : 0
-    const devStore = props.devState['store']
-    const options = genRegsList(devType)
+export class DevChart extends React.Component {
 
-    const [selectedReg, setSelectedReg] = React.useState(options.length === 0 ? 0 : options[0].key)
+    constructor(props) {
+        super(props);
+
+        this.devRegs = this.props.devState !== null ? this.props.devState['regs'] : null
+        this.devType = this.devRegs !== null ? this.devRegs[15] : 0
+        this.devStore = props.devState['store']
+        this.options = ChartsBase.genRegsList(this.devType)
+        this.chart = this.props.devState.chart
+
+        this.state = {
+            selectedReg: this.options.length === 0 ? 0 : this.options[0].key,
+            interval: 0,
+            evts: {},
+            curEvt: 0
+        }
+    }
 
     /**
-     * Преобразовывает в float
-     * @param {number} inData
+     * По от-монтированию компонента
+     */
+    componentWillUnmount() {
+        if (this.props.clearStore && typeof this.props.clearStore === 'function') {
+            this.props.clearStore(this.props.devState.idx)
+        }
+    }
+
+    /**
+     * Отрисовка компонента
      * @returns
      */
-    const toFloat = (inData) => {
-        const bFloat = new Uint8Array([
-            (inData >> 24) & 0xff,
-            (inData >> 16) & 0xff,
-            (inData >> 8) & 0xff,
-            inData & 0xff,
-        ]).buffer;
-        var view = new DataView(bFloat);
-        return view.getFloat32(0, false).toFixed(2)
-    };
-
-    const onChangeReg = (evt, val) => {
-        console.log(evt, val)
-        setSelectedReg(val.key)
-    }
-
-    if (options.length === 0) {
-        return <Label>Нет регистров для отображения</Label>
-    }
-
-    //const regType = devDesc[devType]['regs'].filter(v => v.id === selectedReg)[0].type
-    //const maxVal = 'maximum' in regType ? regType['maximum'] : 'dataMax'
-
-    const data = Array.from({ length: 60 }, (v, k) => {
-        const ts = devStore[selectedReg][0]['ts'] + (60000 * k)
-        const val = devStore[selectedReg].filter((v) => v['ts'] <= ts && v['ts'] > (ts - 60000))
-        let skip = devStore[selectedReg].filter((v) => v['ts'] <= ts)
-        skip = skip.length > 0 ? skip[skip.length - 1] : undefined
-
-        return {
-            ts: `${String(new Date(ts).getHours()).padStart(2,0)}:${String(new Date(ts).getMinutes()).padStart(2,0)}`,
-            v: val.length > 0 ? toFloat(val[0]['v']) : ts <= Date.now() ? toFloat(skip['v']) : undefined
+    render() {
+        const onChangeReg = (evt, val) => {
+            this.setState({ selectedReg: val.key })
         }
-    })
 
-    const maxVal = Math.max.apply(Math, data.filter(v=>v.v > 0).map(v => Number(v.v))) * (1 + Math.sqrt(5))/2
+        const onChangeInterval = (_, val) => {
 
-    return <Stack>
-        <StackItem>
-            <ComboBox
-                defaultSelectedKey={options[0].key}
-                label="Параметр"
-                options={options}
-                onChange={onChangeReg}
-            />
-        </StackItem>
-        <StackItem>
-            <LineChart width={560} height={300} data={data} margin={{ top: 10, right: 0, bottom: 5, left: 0 }} >
-                <Line type="monotone" dataKey="v" stroke="#8884d8" />
-                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                <XAxis dataKey="ts" />
-                <YAxis type="number" domain={[0, maxVal]} scale="linear"/>
-                <Tooltip />
-            </LineChart>
-        </StackItem>
-    </Stack>
+            if (val.key > 0) {
+                const to = Math.trunc(Date.now() / 1000)
+                const from = to - val.key
+                console.log(`get Events:  ${from};${to}`)
+                this.chart.getEvents(this.state.selectedReg, from, to, (evts) => {
+                    this.setState((s) => {
+                        s.evts[this.state.selectedReg] = ChartsBase.midEvents(evts, 60, (val.key / 60) * 1000)
+                        return s
+                    })
+                }, (e) => {
+                    this.setState({ curEvt: e })
+                })
+            }
+
+            this.setState((s) => {
+                if (this.state.selectedReg in this.state.evts) {
+                    delete this.state.evts[this.state.selectedReg]
+                }
+                s.interval = val.key
+                return s
+            })
+        }
+
+
+        if (this.options.length === 0) {
+            return <Label>Нет регистров для отображения</Label>
+        }
+
+        let data = []
+
+        if (this.state.interval === 0) {
+            data = ChartsBase.midEvents(this.devStore[this.state.selectedReg])
+        } else if (this.chart && this.state.interval === -1) {
+
+        } else if (this.chart) {
+            if (this.state.selectedReg in this.state.evts) {
+                data = this.state.evts[this.state.selectedReg]
+            }
+        }
+
+        return <Stack>
+            <StackItem>
+                <ComboBox
+                    defaultSelectedKey={this.options[0].key}
+                    label="Параметр"
+                    options={this.options}
+                    onChange={onChangeReg}
+                />
+            </StackItem>
+
+            <StackItem>
+                {data.length > 0 ?
+                    <LineChart width={560} height={300} data={data} margin={{ top: 10, right: 0, bottom: 5, left: 0 }} >
+                        <Line type="monotone" dataKey="v" stroke="#8884d8" />
+                        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                        <XAxis dataKey="ts" />
+                        <YAxis type="number" domain={[0, ChartsBase.calcMaxVal(data)]} scale="linear" />
+                        <Tooltip />
+                    </LineChart> :
+                    <Spinner label={`Получение данных из устройства (событие ${this.state.curEvt})`} ariaLive="assertive" labelPosition="top" />
+                }
+            </StackItem>
+
+            <StackItem>
+                <Accordion style={{ marginTop: "20px" }}>
+                    <AccordionSummary
+                        expandIcon={<ExpandMoreIcon />}
+                        aria-controls="panel1a-content"
+                        id="panel1a-header"
+                    >
+                        Настройки графика
+                    </AccordionSummary>
+                    <AccordionDetails>
+
+                        <ComboBox
+                            defaultSelectedKey={0}
+                            label="Интервал"
+                            options={[
+                                { key: 0, text: "В реальном времени (следующий час)" },
+                                { key: 3600, text: "За прошлый час" },
+                                { key: 21600, text: "За прошедшие 6 часов" },
+                                { key: 86400, text: "За прошедший день" },
+                                { key: 604800, text: "За прошедшую неделю" },
+                                { key: -1, text: "Указать промежуток времени" }
+                            ]}
+                            onChange={onChangeInterval}
+                        />
+                    </AccordionDetails>
+                </Accordion>
+            </StackItem>
+        </Stack>
+    }
 }

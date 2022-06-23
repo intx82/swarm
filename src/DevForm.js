@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pivot, PivotItem, Label, IconButton } from "@fluentui/react";
+import { Pivot, PivotItem, Label } from "@fluentui/react";
 import { Window } from "./Window";
 import { DevMainCtrls } from "./DevMainCtrls";
 import { DevFw } from "./DevFw";
@@ -54,9 +54,9 @@ export const DevForm = (props) => {
         devDesc.tabs.events ?
           <PivotItem headerText="Графики" itemI con="Diagnostic">
             <DevChart
-              devDesc={devDesc}
               devState={props.devState}
               user={props.user}
+              clearStore={props.clearStore}
             />
           </PivotItem> : ""
       }
