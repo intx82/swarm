@@ -78,10 +78,15 @@ export class DevChart extends React.Component {
         super(props);
 
         this.devRegs = this.props.devState !== null ? this.props.devState['regs'] : null
+
         this.devType = this.devRegs !== null ? this.devRegs[15] : 0
         this.devStore = props.devState['store']
         this.options = ChartsBase.genRegsList(this.devType)
         this.chart = this.props.devState.chart
+
+        if (this.props.user) {
+            this.chart.setUser(this.props.user)
+        }
 
         this.state = {
             selectedReg: this.options.length === 0 ? 0 : this.options[0].key,

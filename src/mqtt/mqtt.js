@@ -36,15 +36,22 @@ class MqttBase {
      */
     pubDev(topic, value) {
 
-        console.log(`publish: [ Hub: ${this._dev.hub}, Serial: ${this._dev.dev}, topic: ${topic}, Value: ${value} ]`)
+        console.log(`publish: [ Hub: ${this._dev.hub}, Serial: ${this._dev.dev}, topic: ${topic}, Value: ${value}, user: ${this._user} ]`)
         if (this._user.hash) {
             const hmac = sha256.hmac.create(this._user.hash)
             hmac.update(String(value))
             const sign = Buffer.from(hmac.array()).toString('base64')
             value = String(value) + '.' + String(sign)
         }
-
         this.client.publish(`/${this._dev.hub}/${this._dev.dev}/${topic}`, value.toString())
+    }
+
+    /**
+     * Устанавливает пользователя
+     * @param {*} user пользователь
+     */
+    setUser(user) {
+        this._user = user
     }
 
     /**
