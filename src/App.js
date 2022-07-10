@@ -332,6 +332,8 @@ class App extends React.Component {
             } else if (reg === 1) {
                 devs[devIdx].regTime = new Date(devs[devIdx]['regs'][1] * 1000)
             }
+
+            this.DevCommitMessage(devs, devIdx)
         }
 
         re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/version')
@@ -360,6 +362,7 @@ class App extends React.Component {
             devIdx = devs.findIndex((itm) => itm.hub === hub)
             if (devIdx !== -1) {
                 devs[devIdx].status = Number(message.toString())
+                this.DevCommitMessage(devs, devIdx)
             } else {
                 this.client.publish(`/${hub}/error`, "3")
             }
@@ -385,49 +388,12 @@ class App extends React.Component {
             }
         }
 
-        re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/time')
-        if (re.test(topic.toString())) {
-            let [, hub] = topic.toString().toString().split('/', 2)
-            devIdx = devs.findIndex((itm) => itm.hub === hub)
-            if (devIdx === -1) {
-                devIdx = devs.push({
-                    hub: hub,
-                    dev: ' - ',
-                    regTime: Date.now(),
-                    status: 0,
-                    lqi: 0,
-                    lastMsgTime: Date.now(),
-                    mark: false,
-                    regs: new Array(20).fill(0),
-                    auth: false,
-                    type: null,
-                    version: null,
-                    updState: null,
-                    idx: -1,
-                    store: {},
-                    chart: null,
-                })
-
-//                devs[devIdx].updState = new FwUpd(this.client, devs[devIdx], this.onFwUpdChunkWr, this.state.user, this.onFWUpdErr)
-                console.log('Reg done', devIdx)
-                devs[devIdx].idx = devIdx
-                this.setDevStatusIcon(devs[devIdx - 1], "StatusCircleCheckmark")
-            } else {
-                devs[devIdx].lastMsgTime = Date.now()
-                devs[devIdx].regTime = Date.now()
-                devs[devIdx].status = 0
-                this.setDevStatusIcon(devs[devIdx], "StatusCircleCheckmark")
-            }
-        }
-
         this.mqttMsgPerMin = this.mqttMsgPerMin + 1;
         if (devIdx !== -1) {
             if (typeof devs[devIdx] === 'undefined') {
                 console.log("Exception", devIdx, devs)
                 return
             }
-
-            this.DevCommitMessage(devs, devIdx)
         }
     }
 

@@ -44,7 +44,7 @@ class ChartsBase extends MqttBase {
                     value = JSON.parse(value)
                     value['ts'] = Number(value['ts']) * 1000
 
-                    if (onGetEvt && typeof(onGetEvt) === 'function') {
+                    if (onGetEvt && typeof (onGetEvt) === 'function') {
                         onGetEvt(_evts.length)
                     }
 
@@ -114,24 +114,37 @@ class ChartsBase extends MqttBase {
      * Расширяет диапазон событий (растягивает их на 60 эл по 60000мсек)
      * @param {*} devEvents Входной список событий
      * @param {*} length Длина (по-умолчанию 60 элементов, так как в часе 60 минут)
-     * @param {*} interval Интервал между событиями, по-умолчанию 60000мсек => 1минута
+     * @param {Number} from От какого времени идет отсчет (unixtime)
+     * @param {Number} to До какого времени идет отсчет (unixtime)
      * @returns Массив с событиями подготовленный для отображения
      */
-    static midEvents(devEvents, length = 60, interval = 60000) {
-        if (!devEvents) {
+    static midEvents(devEvents, length = 60, from = null, to = null) {
+        if (!devEvents || devEvents.length === 0) {
             return []
         }
 
-        return Array.from({ length: length }, (v, k) => {
+        if (from === null) {
+            from = Math.trunc(devEvents[0]['ts'] / 1000) - 1
+        }
 
-            const ts = devEvents[0]['ts'] + (interval * k)
-            const val = devEvents.filter((v) => v['ts'] <= ts && v['ts'] > (ts - interval))
-            let skip = devEvents.filter((v) => v['ts'] <= ts)
-            skip = skip.length > 0 ? skip[skip.length - 1] : undefined
+        if (to === null) {
+            to = Math.trunc(devEvents[0]['ts'] / 1000) + 3599
+        }
+
+        return Array.from({ length: length }, (v, k) => {
+            const intval = ((to - from) / length)
+            const cur = (from + (k * intval)) * 1000
+            const prev = k > 0 ? (from + ((k - 1) * intval)) * 1000 : cur
+            const next = (from + ((k + 1) * intval)) * 1000
+
+            const itm = devEvents.filter((v) => v['ts'] >= cur && v['ts'] <= next)
+            const skipVal = devEvents.filter((v) => v['ts'] < cur && v['ts'] >= prev)?.at(-1)
+            const ts = itm.length > 0 ? itm[0]['ts'] : cur
+            const val = itm.length > 0 ? this.toFloat(itm[0]['v']) : skipVal ? this.toFloat(skipVal['v']) : undefined
 
             return {
                 ts: `${String(new Date(ts).getHours()).padStart(2, 0)}:${String(new Date(ts).getMinutes()).padStart(2, 0)}`,
-                v: val.length > 0 ? this.toFloat(val[0]['v']) : ts <= Date.now() ? this.toFloat(skip['v']) : undefined
+                v: val
             }
         })
     }
