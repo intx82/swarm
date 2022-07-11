@@ -6,8 +6,8 @@ import { ComboBox, Stack, StackItem, Label, PrimaryButton, ProgressIndicator, Li
 
 /**
  * Форма для управления обновлением прошивки
- * @param {*} props 
- * @returns 
+ * @param {*} props
+ * @returns
  */
 export const DevFw = (props) => {
     const devRegs = props.devState !== null ? props.devState['regs'] : null
@@ -34,6 +34,12 @@ export const DevFw = (props) => {
         }
     }
 
+    if (!props.user || !props.user.hash) {
+        return <Label>
+            Для обновления прошивки необходима авторизация
+        </Label>
+    }
+
     if (updProgress) {
         if (updProgress < selectedFw['s']) {
             return <ProgressIndicator
@@ -46,26 +52,27 @@ export const DevFw = (props) => {
                 Перезагрузка устройства и последующение обновление
             </Label>
         }
-    } else {
-        return <Stack>
-            <StackItem> <Label>Текущая версия: {branch && commit ?   <b>{ver} {branch} {commit}</b> : !devReadOnly ? <Link
-                    onClick={() => props.getVersion()} >Получить из устройства</Link> : <b>Для обновления ПО устройства необходима авторизиация</b> 
-            }</Label></StackItem>
-            {!devReadOnly ?
-                <StackItem style={{ marginBottom: '4pt' }}>
-                    <ComboBox
-                        onChange={onSelectFw}
-                        label="Доступные версии ПО устройства:"
-                        defaultSelectedKey={selectedFw['r']}
-                        options={fwList[devType].map((v) => {
-                            return {
-                                key: v['r'],
-                                text: `${v['r']} ${v['b']} ${v['c']} Размер: ${Number.parseInt(v['s']) * 1024} кб`,
-                                tag: v
-                            }
-                        })}
-                    /></StackItem> : ''}
-            {!devReadOnly ? <StackItem align="end"><PrimaryButton disabled={!props.devState.version} text="Записать" onClick={onWriteFw} /></StackItem> : ''}
-        </Stack>
     }
+
+    return <Stack>
+        <StackItem> <Label>Текущая версия: {branch && commit ? <b>{ver} {branch} {commit}</b> : !devReadOnly ? <Link
+            onClick={() => props.getVersion()} >Получить из устройства</Link> : <b>Для обновления ПО устройства необходима авторизиация</b>
+        }</Label></StackItem>
+        {!devReadOnly ?
+            <StackItem style={{ marginBottom: '4pt' }}>
+                <ComboBox
+                    onChange={onSelectFw}
+                    label="Доступные версии ПО устройства:"
+                    defaultSelectedKey={selectedFw['r']}
+                    options={fwList[devType].map((v) => {
+                        return {
+                            key: v['r'],
+                            text: `${v['r']} ${v['b']} ${v['c']} Размер: ${Number.parseInt(v['s']) * 1024} кб`,
+                            tag: v
+                        }
+                    })}
+                /></StackItem> : ''}
+        {!devReadOnly ? <StackItem align="end"><PrimaryButton disabled={!props.devState.version} text="Записать" onClick={onWriteFw} /></StackItem> : ''}
+    </Stack>
+
 }
