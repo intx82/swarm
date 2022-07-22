@@ -113,8 +113,22 @@ export class DevChart extends React.Component {
      * @returns
      */
     render() {
+
+
+        const updateChart = (intval) => {
+            if (intval > 0) {
+                const to = Math.trunc(Date.now() / 1000)
+                retrieveData(to - intval, to)
+            } else if (intval === 0) {
+                this.setState({
+                    from: 0,
+                    to: 0
+                })
+            }
+        }
+
         const onChangeReg = (evt, val) => {
-            this.setState({ selectedReg: val.key })
+            this.setState({ selectedReg: val.key },()=>updateChart(this.state.chartSelector))
         }
 
 
@@ -147,18 +161,9 @@ export class DevChart extends React.Component {
             const intval = val.key
             this.setState({
                 chartSelector: intval,
-            })
-
-            if (intval > 0) {
-                const to = Math.trunc(Date.now() / 1000)
-                retrieveData(to - intval, to)
-            } else if (intval === 0) {
-                this.setState({
-                    from: 0,
-                    to: 0
-                })
-            }
+            }, ()=>updateChart(intval))
         }
+
 
 
         if (this.options.length === 0) {
@@ -195,8 +200,8 @@ export class DevChart extends React.Component {
                         <Tooltip />
                     </LineChart> :
                     this.state.chartSelector === -1 ?
-                    <Label>Нет данных для отображения</Label> :
-                    <Spinner label={`Получение данных из устройства (событие ${this.state.curEvt})`} ariaLive="assertive" labelPosition="top" />
+                        <Label>Нет данных для отображения</Label> :
+                        <Spinner label={`Получение данных из устройства (событие ${this.state.curEvt})`} ariaLive="assertive" labelPosition="top" />
                 }
             </StackItem>
 
@@ -268,7 +273,7 @@ export class DevChart extends React.Component {
                                 this.state.chartSelector === -1 ? <StackItem>
                                     <PrimaryButton
                                         text="Показать"
-                                        onClick={()=>{
+                                        onClick={() => {
                                             retrieveData(this.state.from, this.state.to)
                                         }}
                                     />
