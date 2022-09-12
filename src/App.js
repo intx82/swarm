@@ -20,6 +20,7 @@ import ver from "./version.json"
 import { sha256 } from "js-sha256"
 import FwUpd from "./mqtt/fwupd"
 import ChartsBase from "./mqtt/charts";
+import UsersBase from "./mqtt/users";
 
 initializeIcons();
 
@@ -41,6 +42,7 @@ const contentStyles = mergeStyleSets({
 
 const MQTT_SRV = 'wss://swarm.x.ks.ua:9001'
 const UPDATER_TOPIC = ">updater/"
+const USER_LIST_TOPIC = "user/list"
 
 class App extends React.Component {
 
@@ -263,6 +265,16 @@ class App extends React.Component {
             devs[devIdx].updState.onMsg(topic, message)
         }
 
+        if (topic.toString().endsWith(USER_LIST_TOPIC)) {
+            const [,hub] = topic.toString().split('/', 2)
+
+            devIdx = devs.findIndex((itm) => itm.hub === hub)
+            if (devIdx === -1 || !devs[devIdx].updState) {
+                return;
+            }
+            devs[devIdx].usersBase.onMsg(topic, message)
+        }
+
         let re = new RegExp('\\/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\\/\\d{3,12}\\/\\d{1,3}')
         if (re.test(topic.toString())) {
             let [, hub, dev, reg] = topic.toString().match(re).toString().split('/', 4)
@@ -285,6 +297,7 @@ class App extends React.Component {
                     idx: -1,
                     store: {},
                     chart: null,
+                    usersBase: null,
                 }) - 1;
 
                 devs[devIdx].idx = devIdx
@@ -299,6 +312,10 @@ class App extends React.Component {
 
             if (!devs[devIdx].chart) {
                 devs[devIdx].chart = new ChartsBase(this.client, devs[devIdx], this.state.user)
+            }
+
+            if (!devs[devIdx].usersBase) {
+                devs[devIdx].usersBase = new UsersBase(this.client, devs[devIdx], this.state.user)
             }
 
             devs[devIdx]['regs'][0] = Number(dev)

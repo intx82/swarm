@@ -1,9 +1,10 @@
 import * as React from "react";
-import { Pivot, PivotItem, Label } from "@fluentui/react";
+import { Pivot, PivotItem } from "@fluentui/react";
 import { Window } from "./Window";
 import { DevMainCtrls } from "./DevMainCtrls";
 import { DevFw } from "./DevFw";
 import { DevChart } from "./DevCharts";
+import { DevUsers } from "./DevUsers";
 
 /**
  * Основная форма устройства
@@ -33,7 +34,7 @@ export const DevForm = (props) => {
   }
 
   return <Window title={devDesc.name} isOpen={props.devState !== null} onCancel={props.onCancel}>
-    <Pivot aria-label="Device menu" onLinkClick={onLinkClick}>
+    <Pivot aria-label="Device menu" onLinkClick={onLinkClick} linkFormat="tabs">
       <PivotItem headerText="Основное" itemCount={devStatus} itemIcon="AllApps">
         {devReadOnly ? <p>Для управления устройством необходима авторизация</p> : ''}
         {devDesc.regs.map((item, index) => {
@@ -47,7 +48,7 @@ export const DevForm = (props) => {
       {
         devDesc.tabs.users ?
           <PivotItem headerText="Пользователи" itemIcon="FabricUserFolder">
-            <Label>Тут должен был быть список пользователей</Label>
+            <DevUsers devState={props.devState} user={props.user} />
           </PivotItem> : ""
       }
       {

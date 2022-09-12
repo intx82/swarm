@@ -29,7 +29,7 @@ class ChartsBase extends MqttBase {
         let evtCount = 0
 
         if (typeof (onTimeout) === "function") {
-            tmr = setInterval(onTimeout, timeout)
+            tmr = setTimeout(onTimeout, timeout)
         }
 
         this.subDev(evtTopic, (topic, value) => {

@@ -64,7 +64,12 @@ class MqttBase {
             const _devTopic = `/${this._dev.hub}/${this._dev.dev}/${topic}`
             this.sub(_devTopic, (_topic, value) => {
                 value = value.toString()
-                hnd(_topic, value.split('.', 2)[0])
+                
+                if (value.split('.').length > 1 && this._dev.auth) {
+                    hnd(_topic, value.split('.').slice(0,-1).join('.'))
+                } else {
+                    hnd(_topic, value)
+                }
             })
         }
     }
