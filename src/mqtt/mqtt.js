@@ -37,7 +37,7 @@ class MqttBase {
     pubDev(topic, value) {
 
         console.log(`publish: [ Hub: ${this._dev.hub}, Serial: ${this._dev.dev}, topic: ${topic}, Value: ${value}, user: ${this._user} ]`)
-        if (this._user.hash) {
+        if (this._user.hash && this._dev.auth) {
             const hmac = sha256.hmac.create(this._user.hash)
             hmac.update(String(value))
             const sign = Buffer.from(hmac.array()).toString('base64')
