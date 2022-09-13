@@ -38,10 +38,10 @@ class UsersBase extends MqttBase {
      * Получает список пользователей
      * @param {Function} onDone вызывается по выполнению
      * @param {Function} onTimeout Вызывается по таймауту
-     * @param {number} timeout Время таймаута ответа (5сек по-умолчанию)
+     * @param {number} timeout Время таймаута ответа (60сек по-умолчанию)
      */
 
-    getUserList = (onDone, onTimeout = null, timeout = 30000) => {
+    getUserList = (onDone, onTimeout = null, timeout = 60000) => {
 
         const _users = []
         this.__setTmr(() => {
@@ -56,9 +56,8 @@ class UsersBase extends MqttBase {
                 return;
             }
 
-            this.__clrTmr()
-
             if (value === '{}') {
+                this.__clrTmr()
                 if (typeof (onDone) === 'function') {
                     onDone(_users)
                 }
@@ -74,6 +73,29 @@ class UsersBase extends MqttBase {
         })
 
         this.pubDev(USER_LIST_TOPIC, USER_LIST_CMD)
+    }
+
+
+    /**
+     * Добавляет пользователя в устройство
+     * 
+     * @param {*} onDone По выполненю
+     * @param {*} onTimeout По таймауту
+     * @param {*} timeout Время таймаута
+     */
+    addUser = (user, onDone, onTimeout, timeout = 5000) => {
+
+    }
+
+    /**
+     * Удаляет пользователя из устройства
+     * @param {*} user Описание пользователя
+     * @param {*} onDone По выполнению
+     * @param {*} onTimeout По таймауту
+     * @param {*} timeout Таймаут
+     */
+    rmUser = (user, onDone, onTimeout, timeout = 5000) => {
+
     }
 
 };

@@ -15,6 +15,7 @@ import {
     mergeStyleSets
 } from "@fluentui/react";
 
+import { UserForm } from "./UserForm";
 
 const contentStyles = mergeStyleSets({
     dtListCell: {
@@ -82,11 +83,6 @@ export const DevUsers = (props) => {
         }
     })
 
-    React.useEffect(() => {
-        console.log(selectedItems)
-    }, [selectedItems])
-
-
     if (props.devState.auth && !props.user.hash) {
         return <Stack>
             <StackItem>
@@ -99,17 +95,24 @@ export const DevUsers = (props) => {
         dev.usersBase.setUser(props.user)
     }
 
-
     const showAddUserWnd = () => {
-        console.log('Add')
-    }
-
-    const showEditUserWnd = () => {
-        console.log('edit:', selectedItems[0])
+        setState(4)
     }
 
     const onRemoveUsers = () => {
         console.log('remove', selectedItems)
+    }
+
+    const onAddUser = (u) => {
+        u['u'] = Buffer.from(u['u']).toString('hex')
+        console.log('adduser',u)
+        setState(0)
+    }
+
+    const onChanegUser = (old, u) => {
+        u['u'] = Buffer.from(u['u']).toString('hex')
+        console.log('changeuser',old, u)
+        setState(0)
     }
 
     const cmdBarItems = [
@@ -126,7 +129,7 @@ export const DevUsers = (props) => {
             iconOnly: true,
             disabled: selectedItems.length !== 1,
             iconProps: { iconName: 'Edit' },
-            onClick: showEditUserWnd,
+            onClick: showAddUserWnd,
         },
         {
             key: 'remove',
@@ -150,7 +153,12 @@ export const DevUsers = (props) => {
         setState(1)
     }
 
-    if (state === 3) {
+    if (state === 4) {
+        return <UserForm user={selectedItems.length > 0 ? selectedItems[0] : undefined} onCancel={() => {
+            setState(0)
+        }}
+        onConfirm={selectedItems.length > 0 ? (u) => onChanegUser(selectedItems[0], u) : onAddUser} />
+    } else if (state === 3) {
         return <Stack>
             <StackItem>
                 <Label>Нет ответа от устройства</Label>

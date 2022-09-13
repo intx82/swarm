@@ -33,7 +33,7 @@ export const DevForm = (props) => {
     }
   }
 
-  return <Window title={devDesc.name} isOpen={props.devState !== null} onCancel={props.onCancel}>
+  return <Window title={devDesc.name} isOpen={props.devState !== null} onCancel={props.onCancel} width="640pt">
     <Pivot aria-label="Device menu" onLinkClick={onLinkClick} linkFormat="tabs">
       <PivotItem headerText="Основное" itemCount={devStatus} itemIcon="AllApps">
         {devReadOnly ? <p>Для управления устройством необходима авторизация</p> : ''}

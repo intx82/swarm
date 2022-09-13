@@ -22,7 +22,7 @@ export const Window = (props) => {
       display: "flex",
       flexFlow: "column nowrap",
       alignItems: "stretch",
-      width: 'width' in props ? props.width : '640pt'
+      width: 'width' in props ? props.width : '480pt'
     },
   });
 
@@ -36,7 +36,7 @@ export const Window = (props) => {
           : () => console.log("Cancel")
       }
       containerClassName={modalStyle.container}
-      style={{width: '640pt'}}
+      style={{width: 'width' in props ? props.width : '480pt'}}
     >
       <div className={contentStyles.header}>
         <span id={titleId}>{props.title}</span>
