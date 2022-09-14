@@ -61,10 +61,10 @@ class UsersBase extends MqttBase {
 
             if (value === '{}') {
                 this.__clrTmr()
+                this.unsubDev(USER_LIST_TOPIC)
                 if (typeof (onDone) === 'function') {
                     onDone(_users)
                 }
-                this.unsubDev(USER_LIST_TOPIC)
             } else {
                 try {
                     value = JSON.parse(value)
@@ -87,7 +87,11 @@ class UsersBase extends MqttBase {
      * @param {*} timeout Время таймаута
      */
     addUser = (user, onDone, onTimeout, timeout = 10000) => {
-        const _user = JSON.stringify({"n": user["n"], "p": user["p"], "u": Buffer.from(user["u"]).toString('hex') });
+        const _user = new Uint8Array(user['u'].length + 1 + user['n'].length + 1);
+        _user.set(user['u'])
+        _user[32] = user['p']
+        _user[33] = user['n'].length
+        _user.set(Buffer.from(user['n']),34)
 
         this.__setTmr(() => {
             this.unsubDev(USER_ADD_TOPIC)
@@ -96,17 +100,17 @@ class UsersBase extends MqttBase {
 
         this.subDev(USER_ADD_TOPIC, (top, value) => {
             value = value.toString()
-            if (value === _user) {
+            if (value === Buffer.from(_user).toString('base64')) {
                 return;
             }
 
+            this.unsubDev(USER_ADD_TOPIC)
             this.__clrTmr()
             onDone?.(value)
 
-            this.unsubDev(USER_ADD_TOPIC)
         })
 
-        this.pubDev(USER_ADD_TOPIC, _user)
+        this.pubDev(USER_ADD_TOPIC, Buffer.from(_user).toString('base64'))
     }
 
     /**

@@ -514,8 +514,7 @@ class App extends React.Component {
      * @param {*} onTimeout По Таймауту
      */
     onAddUser = (dev, user, onDone, onTimeout) => {
-        console.log(dev, user)
-        onDone()
+        dev.usersBase.addUser(user, onDone, onTimeout)
     }
 
     /**
@@ -527,8 +526,9 @@ class App extends React.Component {
      * @param {*} onTimeout По таймауту
      */
     onChangeUser = (dev, old, user, onDone, onTimeout) => {
-        console.log(dev, old, user)
-        onTimeout()
+        dev.usersBase.rmUser(old, () => {
+            dev.usersBase.addUser(user, onDone, onTimeout)
+        }, onTimeout)
     }
 
     /**
