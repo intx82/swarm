@@ -12,20 +12,14 @@ import {
     CommandBar,
     DetailsList,
     DetailsListLayoutMode,
-    mergeStyleSets
+    Dialog,
+    DialogFooter,
+    DefaultButton,
+    DialogType,
+    Icon,
 } from "@fluentui/react";
 
 import { UserForm } from "./UserForm";
-
-const contentStyles = mergeStyleSets({
-    dtListCell: {
-        display: "flex",
-        alignItems: "center",
-        height: "32px",
-        fontSize: "10pt"
-    }
-})
-
 
 const TblHdr = [{
     enable: true,
@@ -37,7 +31,7 @@ const TblHdr = [{
     isPadded: true,
     isResizable: true,
     onRender: (val) => {
-        return <div className={contentStyles.dtListCell}>{val['n']}</div>
+        return <div>{val['n']}</div>
     }
 }, {
     enable: true,
@@ -49,7 +43,7 @@ const TblHdr = [{
     isPadded: true,
     isResizable: true,
     onRender: (val) => {
-        return <div className={contentStyles.dtListCell}>{val['u']}</div>
+        return <div>{val['u']}</div>
     }
 }, {
     enable: true,
@@ -61,9 +55,23 @@ const TblHdr = [{
     isPadded: true,
     isResizable: true,
     onRender: (val) => {
-        return <div className={contentStyles.dtListCell}>{val['p']}</div>
+        return <div>{val['p'] > 63 ? "Администратор" : "Пользователь"}</div>
     }
 }];
+
+
+const UserList = (props) => {
+    return <div>
+        <Label>Вы действительно хотите удалить: </Label>
+        <ul>
+            {
+                props.users.map((v, i, a) => {
+                    return <li key={i}>{v['n']}</li>
+                })
+            }
+        </ul>
+    </div>
+}
 
 /**
  * Форма для управления обновлением прошивки
@@ -95,24 +103,31 @@ export const DevUsers = (props) => {
         dev.usersBase.setUser(props.user)
     }
 
-    const showAddUserWnd = () => {
-        setState(4)
-    }
-
-    const onRemoveUsers = () => {
-        console.log('remove', selectedItems)
+    const resetForm = () => {
+        setSelectedItem([])
+        setState(0)
     }
 
     const onAddUser = (u) => {
-        u['u'] = Buffer.from(u['u']).toString('hex')
-        console.log('adduser',u)
-        setState(0)
+        setState(5)
+        props.onAddUser?.(dev, u, () => {
+            setTimeout(() => resetForm(), 3000)
+            setState(6)
+        }, () => {
+            setTimeout(() => resetForm(), 3000)
+            setState(7)
+        })
     }
 
     const onChanegUser = (old, u) => {
-        u['u'] = Buffer.from(u['u']).toString('hex')
-        console.log('changeuser',old, u)
-        setState(0)
+        setState(5)
+        props.onChangeUser?.(dev, old, u, () => {
+            setTimeout(() => resetForm(), 3000)
+            setState(6)
+        }, () => {
+            setTimeout(() => resetForm(), 3000)
+            setState(7)
+        })
     }
 
     const cmdBarItems = [
@@ -121,7 +136,7 @@ export const DevUsers = (props) => {
             text: 'Добавить',
             iconOnly: true,
             iconProps: { iconName: 'Add' },
-            onClick: showAddUserWnd,
+            onClick: () => setState(4),
         },
         {
             key: 'edit',
@@ -129,7 +144,7 @@ export const DevUsers = (props) => {
             iconOnly: true,
             disabled: selectedItems.length !== 1,
             iconProps: { iconName: 'Edit' },
-            onClick: showAddUserWnd,
+            onClick: () => setState(4),
         },
         {
             key: 'remove',
@@ -137,7 +152,7 @@ export const DevUsers = (props) => {
             iconOnly: true,
             disabled: selectedItems.length === 0,
             iconProps: { iconName: 'Remove' },
-            onClick: onRemoveUsers,
+            onClick: () => setState(8),
         },
     ]
 
@@ -153,11 +168,53 @@ export const DevUsers = (props) => {
         setState(1)
     }
 
-    if (state === 4) {
+
+
+    if (state === 8) {
+        const dialogContentProps = {
+            type: DialogType.largeHeader,
+            title: selectedItems.length > 1 ? 'Удаление пользователей' : 'Удаление пользователя',
+            subText: <UserList users={selectedItems} />
+        };
+
+        return <Dialog
+            hidden={state !== 8}
+            onDismiss={() => resetForm()}
+            dialogContentProps={dialogContentProps}
+        >
+            <DialogFooter>
+                <PrimaryButton onClick={() => {
+                    console.log(props.onRemoveUsers)
+
+                    props.onRemoveUsers?.(dev, selectedItems, () => {
+                        setTimeout(() => resetForm(), 3000)
+                        setState(6)
+                    }, () => {
+                        setTimeout(() => resetForm(), 3000)
+                        setState(7)
+                    })
+                }} text="Удалить" style={{ backgroundColor: "#a4373a", border: "1px solid #d83b01" }} />
+                <DefaultButton onClick={() => resetForm()} text="Отмена" />
+            </DialogFooter>
+        </Dialog>
+    } else if (state === 7) {
+        return <Stack>
+            <StackItem align="center"><Icon iconName="StatusCircleErrorX" style={{ fontSize: "96px", color: "#a4373a" }} /></StackItem>
+            <StackItem align="center"><Label>Ошибка выполнения</Label></StackItem>
+        </Stack>
+    } else if (state === 6) {
+        return <Stack>
+            <StackItem align="center"><Icon iconName="StatusCircleCheckmark" style={{ fontSize: "96px", color: "#31752f" }} /></StackItem>
+            <StackItem align="center"><Label>Выполнено</Label></StackItem>
+        </Stack>
+    }
+    else if (state === 5) {
+        return <Spinner label={'Выполнение операции'} ariaLive="assertive" labelPosition="top" />
+    } else if (state === 4) {
         return <UserForm user={selectedItems.length > 0 ? selectedItems[0] : undefined} onCancel={() => {
-            setState(0)
+            resetForm()
         }}
-        onConfirm={selectedItems.length > 0 ? (u) => onChanegUser(selectedItems[0], u) : onAddUser} />
+            onConfirm={selectedItems.length > 0 ? (u) => onChanegUser(selectedItems[0], u) : onAddUser} />
     } else if (state === 3) {
         return <Stack>
             <StackItem>
@@ -167,7 +224,7 @@ export const DevUsers = (props) => {
                 <PrimaryButton
                     text="Повторить"
                     onClick={() => {
-                        setState(0);
+                        resetForm()
                     }} />
             </StackItem>
         </Stack>
@@ -179,9 +236,10 @@ export const DevUsers = (props) => {
                 setKey="users"
                 layoutMode={DetailsListLayoutMode.justified}
                 selection={selection}
+                onItemInvoked={() => setState(4)}
                 compact
             />
-            : <Label>Нет пользователей в устройстве. <Link onClick={showAddUserWnd}>Добавить?</Link></Label>
+            : <Label>Нет пользователей в устройстве. <Link onClick={() => setState(4)}>Добавить?</Link></Label>
         return <Stack style={{ 'margin': '0px -21px', 'padding': 0 }}>
             <StackItem>
                 <CommandBar
@@ -194,7 +252,7 @@ export const DevUsers = (props) => {
         </Stack>
     } else {
         return <Stack>
-            <StackItem> <Spinner>Получение списка пользователей</Spinner></StackItem>
+            <StackItem> <Spinner label="Получение списка пользователей" /></StackItem>
         </Stack>
     }
 

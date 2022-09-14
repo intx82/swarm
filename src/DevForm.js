@@ -48,7 +48,13 @@ export const DevForm = (props) => {
       {
         devDesc.tabs.users ?
           <PivotItem headerText="Пользователи" itemIcon="FabricUserFolder">
-            <DevUsers devState={props.devState} user={props.user} />
+            <DevUsers 
+              devState={props.devState}
+              user={props.user}
+              onAddUser={props.onAddUser}
+              onChangeUser={props.onChangeUser}
+              onRemoveUsers={props.onRemoveUsers}
+            />
           </PivotItem> : ""
       }
       {

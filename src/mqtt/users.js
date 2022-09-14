@@ -4,6 +4,9 @@ import MqttBase from "./mqtt"
 const USER_LIST_TOPIC = 'user/list'
 const USER_LIST_CMD = 'list'
 
+const USER_ADD_TOPIC = 'user/add'
+const USER_RM_TOPIC = 'user/remove'
+
 
 /**
  * Класс обработки запросов на получения списка пользователей / добавление пользователей
@@ -83,8 +86,27 @@ class UsersBase extends MqttBase {
      * @param {*} onTimeout По таймауту
      * @param {*} timeout Время таймаута
      */
-    addUser = (user, onDone, onTimeout, timeout = 5000) => {
+    addUser = (user, onDone, onTimeout, timeout = 10000) => {
+        const _user = JSON.stringify({"n": user["n"], "p": user["p"], "u": Buffer.from(user["u"]).toString('hex') });
 
+        this.__setTmr(() => {
+            this.unsubDev(USER_ADD_TOPIC)
+            onTimeout?.();
+        }, timeout)
+
+        this.subDev(USER_ADD_TOPIC, (top, value) => {
+            value = value.toString()
+            if (value === _user) {
+                return;
+            }
+
+            this.__clrTmr()
+            onDone?.(value)
+
+            this.unsubDev(USER_ADD_TOPIC)
+        })
+
+        this.pubDev(USER_ADD_TOPIC, _user)
     }
 
     /**
@@ -95,7 +117,29 @@ class UsersBase extends MqttBase {
      * @param {*} timeout Таймаут
      */
     rmUser = (user, onDone, onTimeout, timeout = 5000) => {
+        const _user = Buffer.from(user['u'], 'hex').toString('base64')
+        console.warn('remove user: ', user)
 
+        this.__setTmr(() => {
+            this.unsubDev(USER_RM_TOPIC)
+            onTimeout?.();
+        }, timeout)
+
+        this.subDev(USER_RM_TOPIC, (top, value) => {
+            value = value.toString()
+            console.log(value)
+
+            if (value === _user) {
+                return;
+            }
+
+            this.unsubDev(USER_RM_TOPIC)
+
+            this.__clrTmr()
+            onDone?.(value)
+        })
+
+        this.pubDev(USER_RM_TOPIC, _user)
     }
 
 };

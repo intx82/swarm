@@ -24,18 +24,18 @@ function genUID(login, pwd) {
  */
 export const UserForm = (props) => {
     const [pwd, setPwd] = React.useState(['0', '1']);
-    const [login, setLogin] = React.useState(null);
+    const [login, setLogin] = React.useState(props.user ? props.user.n : null);
     const [perm, setPerm] = React.useState(63);
 
     const validateLogin = (mail) => {
         return !!String(mail)
             .toLowerCase()
             .match(
-                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{1,}))$/
             );
     };
 
-    const [disPwd, setDisPwd] = React.useState(true);
+    const [disPwd, setDisPwd] = React.useState(!props.user);
 
     const onConfirm = () => {
         props.onConfirm({'n': login, 'p': perm, 'u': genUID(login, pwd[0]) })

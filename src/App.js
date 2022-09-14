@@ -43,6 +43,8 @@ const contentStyles = mergeStyleSets({
 const MQTT_SRV = 'wss://swarm.x.ks.ua:9001'
 const UPDATER_TOPIC = ">updater/"
 const USER_LIST_TOPIC = "user/list"
+const USER_RM_TOPIC = "user/remove"
+const USER_ADD_TOPIC = "user/add"
 
 class App extends React.Component {
 
@@ -114,7 +116,7 @@ class App extends React.Component {
         this.setMsg({
             text: `Ошибка обновления ${dev.hub} ${err['e']}`,
             type: MessageBarType.error
-        },5000)
+        }, 5000)
     }
 
     /**
@@ -125,7 +127,7 @@ class App extends React.Component {
      */
     onFwUpdChunkWr = (dev, fw, progress) => {
 
-        if ('setProgress' in fw && typeof(fw['setProgress']) === 'function') {
+        if ('setProgress' in fw && typeof (fw['setProgress']) === 'function') {
             fw['setProgress'](progress)
         }
 
@@ -257,7 +259,7 @@ class App extends React.Component {
         }
 
         if (topic.toString().startsWith(`${UPDATER_TOPIC}run`)) {
-            let [,, hub] = topic.toString().split('/', 3)
+            let [, , hub] = topic.toString().split('/', 3)
             devIdx = devs.findIndex((itm) => itm.hub === hub)
             if (devIdx === -1 || !devs[devIdx].updState) {
                 return;
@@ -265,8 +267,8 @@ class App extends React.Component {
             devs[devIdx].updState.onMsg(topic, message)
         }
 
-        if (topic.toString().endsWith(USER_LIST_TOPIC)) {
-            const [,hub] = topic.toString().split('/', 2)
+        if (topic.toString().endsWith(USER_LIST_TOPIC) || topic.toString().endsWith(USER_RM_TOPIC) || topic.toString().endsWith(USER_ADD_TOPIC)) {
+            const [, hub] = topic.toString().split('/', 2)
 
             devIdx = devs.findIndex((itm) => itm.hub === hub)
             if (devIdx === -1 || !devs[devIdx].updState) {
@@ -505,6 +507,55 @@ class App extends React.Component {
     }
 
     /**
+     * По добавлению пользователя
+     * @param {*} dev Устройство
+     * @param {*} user Пользователь
+     * @param {*} onDone По выполнению
+     * @param {*} onTimeout По Таймауту
+     */
+    onAddUser = (dev, user, onDone, onTimeout) => {
+        console.log(dev, user)
+        onDone()
+    }
+
+    /**
+     * По изменению пользователя
+     * @param {*} dev Устройство
+     * @param {*} old Старый пользователь
+     * @param {*} user Новый пользователь
+     * @param {*} onDone По выполнению
+     * @param {*} onTimeout По таймауту
+     */
+    onChangeUser = (dev, old, user, onDone, onTimeout) => {
+        console.log(dev, old, user)
+        onTimeout()
+    }
+
+    /**
+     * По удалению пользователей из девайса
+     * @param {*} dev Устройство
+     * @param {*} users Пользователи
+     * @param {*} onDone По-выполнению
+     * @param {*} onTimeout По-таймауту
+     */
+    onRemoveUsers = (dev, users, onDone, onTimeout) => {
+
+        let idx = 0
+        const rmUser = () => {
+            dev.usersBase.rmUser(users[idx], () => {
+                idx += 1
+                if (idx >= users.length) {
+                    onDone()
+                } else {
+                    rmUser()
+                }
+            }, onTimeout)
+        }
+
+        rmUser()
+    }
+
+    /**
      * Отправляет запрос на получение версии
      */
     getVersion = (val) => {
@@ -519,7 +570,7 @@ class App extends React.Component {
      * Очищает список сохраненных событий
      */
     clearStore = (devIdx) => {
-        this.setState((st)=>{
+        this.setState((st) => {
             st.devices[devIdx].store = {}
             return st
         })
@@ -763,6 +814,9 @@ class App extends React.Component {
                     onCancel={this.onCloseDevWindow}
                     onChangeReg={this.onChangeReg}
                     onFwUpd={this.onFwUpdStart}
+                    onAddUser={this.onAddUser}
+                    onChangeUser={this.onChangeUser}
+                    onRemoveUsers={this.onRemoveUsers}
                     fwList={this.state.fwList}
                     user={this.state.user}
                     getVersion={this.getVersion}
