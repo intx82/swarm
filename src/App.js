@@ -514,7 +514,13 @@ class App extends React.Component {
      * @param {*} onTimeout По Таймауту
      */
     onAddUser = (dev, user, onDone, onTimeout) => {
-        dev.usersBase.addUser(user, onDone, onTimeout)
+        dev.usersBase.addUser(user, ()=>{
+            this.setState((st) => {
+                st.devices[dev.idx].auth = true
+                return st
+            })
+            onDone();
+        }, onTimeout)
     }
 
     /**
