@@ -862,6 +862,73 @@
             "fw": true
         }
     },
+    "1023": {
+        "name": "Пинговалка",
+        "regs": [
+            {
+                "id": 0,
+                "name": "Серийный номер",
+                "readonly": true,
+                "chart": false,
+                "type": {
+                    "name": "int",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4294967296
+                }
+            },
+            {
+                "id": 1,
+                "name": "Время регистрации",
+                "readonly": true,
+                "chart": false,
+                "type": {
+                    "name": "unixtime"
+                }
+            },
+            {
+                "id": 6,
+                "name": "Аптайм (минуты)",
+                "readonly": true,
+                "chart": true,
+                "type": {
+                    "name": "int",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 4294967296
+                }
+            },
+            {
+                "id": 7,
+                "name": "Пинг",
+                "readonly": true,
+                "chart": true,
+                "type": {
+                    "name": "float",
+                    "step": 0,
+                    "minimum": 0,
+                    "maximum": 5000
+                }
+            },
+            {
+                "id": 12,
+                "name": "Температура платы",
+                "readonly": true,
+                "chart": true,
+                "type": {
+                    "name": "float",
+                    "step": 0,
+                    "minimum": -50.0,
+                    "maximum": 120.0
+                }
+            }
+        ],
+        "tabs": {
+            "users": true,
+            "events": true,
+            "fw": true
+        }
+    },
     "1024": {
         "name": "Солнечная панель",
         "regs": [
