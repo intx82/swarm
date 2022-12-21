@@ -113,7 +113,7 @@ export class DevChart extends React.Component {
      * @returns
      */
     render() {
-
+        const regType = ChartsBase.getRegType(this.devType, this.state.selectedReg)
 
         const updateChart = (intval) => {
             if (intval > 0) {
@@ -136,7 +136,7 @@ export class DevChart extends React.Component {
             console.log(`get Events:  ${from};${to} (${(to - from) / 60})`)
             this.chart.getEvents(this.state.selectedReg, from, to, (evts) => {
                 this.setState((s) => {
-                    s.evts[this.state.selectedReg] = ChartsBase.midEvents(evts, 60, from, to)
+                    s.evts[this.state.selectedReg] = ChartsBase.midEvents(evts, 60, from, to, regType.name)
                     return s
                 })
             }, (e) => {
@@ -164,8 +164,6 @@ export class DevChart extends React.Component {
             }, ()=>updateChart(intval))
         }
 
-
-
         if (this.options.length === 0) {
             return <Label>Нет регистров для отображения</Label>
         }
@@ -173,7 +171,7 @@ export class DevChart extends React.Component {
         let data = []
 
         if (this.state.from === 0 && this.state.to === 0) {
-            data = ChartsBase.midEvents(this.devStore[this.state.selectedReg], 60)
+            data = ChartsBase.midEvents(this.devStore[this.state.selectedReg], 60, null, null, regType.name)
         } else if (this.chart) {
             if (this.state.selectedReg in this.state.evts) {
                 data = this.state.evts[this.state.selectedReg]
