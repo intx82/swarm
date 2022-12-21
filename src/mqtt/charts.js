@@ -86,6 +86,21 @@ class ChartsBase extends MqttBase {
     }
 
     /**
+     * Получает тип данных регистра для выбранного устройства 
+     * @param {*} type 
+     * @param {*} reg 
+     * @returns 
+     */
+    static getRegType(type, reg) {
+        if (type in devDesc) {
+            return devDesc[type]['regs'].filter(v => v.id === reg ).map(v => {
+                return v.type
+            })[0]
+        }
+        return { "name": "float" }
+    }
+
+    /**
      * Считает максимальное значение (верхний предел по Y в графике)
      * @param {Array[float]} data Список значений (событий)
      * @returns верхний предел по Y в графике
@@ -118,7 +133,7 @@ class ChartsBase extends MqttBase {
      * @param {Number} to До какого времени идет отсчет (unixtime)
      * @returns Массив с событиями подготовленный для отображения
      */
-    static midEvents(devEvents, length = 60, from = null, to = null) {
+    static midEvents(devEvents, length = 60, from = null, to = null, type = "float") {
         if (!devEvents || devEvents.length === 0) {
             return []
         }
@@ -140,11 +155,11 @@ class ChartsBase extends MqttBase {
             const itm = devEvents.filter((v) => v['ts'] >= cur && v['ts'] <= next)
             const skipVal = devEvents.filter((v) => v['ts'] < cur && v['ts'] >= prev)?.at(-1)
             const ts = itm.length > 0 ? itm[0]['ts'] : cur
-            const val = itm.length > 0 ? this.toFloat(itm[0]['v']) : skipVal ? this.toFloat(skipVal['v']) : undefined
+            const val = itm.length > 0 ? itm[0]['v'] : skipVal ? skipVal['v'] : undefined
 
             return {
                 ts: `${String(new Date(ts).getHours()).padStart(2, 0)}:${String(new Date(ts).getMinutes()).padStart(2, 0)}`,
-                v: val
+                v: type.toLowerCase() === "float" ? this.toFloat(val) : type.toLowerCase() === "int" ? Number(val) : undefined
             }
         })
     }
