@@ -159,6 +159,7 @@ export class DevChart extends React.Component {
 
         const onChangeInterval = (_, val) => {
             const intval = val.key
+            console.log(intval)
             this.setState({
                 chartSelector: intval,
             }, ()=>updateChart(intval))
@@ -197,7 +198,7 @@ export class DevChart extends React.Component {
                         <YAxis type="number" domain={[0, ChartsBase.calcMaxVal(data)]} scale="linear" />
                         <Tooltip />
                     </LineChart> :
-                    this.state.chartSelector === -1 ?
+                    this.state.chartSelector === -1 && this.state.curEvt === 0 ?
                         <Label>Нет данных для отображения</Label> :
                         <Spinner label={`Получение данных из устройства (событие ${this.state.curEvt})`} ariaLive="assertive" labelPosition="top" />
                 }
