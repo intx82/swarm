@@ -142,12 +142,12 @@ class ChartsBase extends MqttBase {
 
         if (to === null) {
             to = Math.trunc(devEvents[0]['ts'] / 1000) + 3600
-            to += 600 - (to % 600)
+            to -= (to % 600)
         }
 
         if (from === null) {
             from = Math.trunc(devEvents[0]['ts'] / 1000)
-            from = from -  (from % 600)
+            from = from - (from % 600)
         }
 
         const showDate = ((to - from) / (60 * 60)) >= 12

@@ -135,7 +135,7 @@ export class DevChart extends React.Component {
         const retrieveData = (from, to) => {
 
             from -= from % 600 
-            to += 60 - (to % 60)
+            to -= (to % 600)
 
             console.log(`get Events:  ${from};${to} (${(to - from) / 60})`)
             this.chart.getEvents(this.state.selectedReg, from, to, (evts) => {
@@ -198,7 +198,7 @@ export class DevChart extends React.Component {
                         <Line type="monotone" dataKey="v" stroke="#8884d8" />
                         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
                         {/* <XAxis dataKey="ts" interval={9} tickFormatter={(v,i)=> `${ChartsBase.calсTicks(this.state.from, this.state.to)[i]}`}/>*/}
-                        <XAxis dataKey="ts" interval={12}/>
+                        <XAxis dataKey="ts" interval={9}/>
                         <YAxis tickCount={20} domain={[0, ChartsBase.calcMaxVal(data)]} scale="linear" />
                         <Tooltip />
                     </LineChart> :
