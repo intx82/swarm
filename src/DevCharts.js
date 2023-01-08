@@ -195,7 +195,7 @@ export class DevChart extends React.Component {
             <StackItem>
                 {data.length > 0 ?
                     <LineChart width={770} height={300} data={data} margin={{ top: 10, right: 0, bottom: 5, left: 0 }} >
-                        <Line type="monotone" dataKey="v" stroke="#8884d8" />
+                        <Line type="monotone" dataKey="v" stroke="#8884d8" dot={false} />
                         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
                         {/* <XAxis dataKey="ts" interval={9} tickFormatter={(v,i)=> `${ChartsBase.calсTicks(this.state.from, this.state.to)[i]}`}/>*/}
                         <XAxis dataKey="ts" interval={9}/>
