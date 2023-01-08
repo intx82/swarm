@@ -133,6 +133,10 @@ export class DevChart extends React.Component {
 
 
         const retrieveData = (from, to) => {
+
+            from -= from % 600 
+            to += 60 - (to % 60)
+
             console.log(`get Events:  ${from};${to} (${(to - from) / 60})`)
             this.chart.getEvents(this.state.selectedReg, from, to, (evts) => {
                 this.setState((s) => {
@@ -159,7 +163,6 @@ export class DevChart extends React.Component {
 
         const onChangeInterval = (_, val) => {
             const intval = val.key
-            console.log(intval)
             this.setState({
                 chartSelector: intval,
             }, ()=>updateChart(intval))
@@ -194,8 +197,9 @@ export class DevChart extends React.Component {
                     <LineChart width={770} height={300} data={data} margin={{ top: 10, right: 0, bottom: 5, left: 0 }} >
                         <Line type="monotone" dataKey="v" stroke="#8884d8" />
                         <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                        <XAxis dataKey="ts" />
-                        <YAxis type="number" domain={[0, ChartsBase.calcMaxVal(data)]} scale="linear" />
+                        {/* <XAxis dataKey="ts" interval={9} tickFormatter={(v,i)=> `${ChartsBase.calсTicks(this.state.from, this.state.to)[i]}`}/>*/}
+                        <XAxis dataKey="ts" interval={12}/>
+                        <YAxis tickCount={20} domain={[0, ChartsBase.calcMaxVal(data)]} scale="linear" />
                         <Tooltip />
                     </LineChart> :
                     this.state.chartSelector === -1 && this.state.curEvt === 0 ?

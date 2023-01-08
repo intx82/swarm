@@ -23,7 +23,9 @@ class ChartsBase extends MqttBase {
 
     getEvents = (reg, from, to, onDone, onGetEvt, onTimeout = null, timeout = 5000) => {
         const evtTopic = `events/${reg}`
-        let evtTm = `${from};${to + 1}`
+        to += 600 - (to % 600)
+
+        let evtTm = `${from};${to}`
         let _evts = []
         let tmr = null
         let evtCount = 0
@@ -138,33 +140,52 @@ class ChartsBase extends MqttBase {
             return []
         }
 
-        if (from === null) {
-            from = Math.trunc(devEvents[0]['ts'] / 1000) - 1
+        if (to === null) {
+            to = Math.trunc(devEvents[0]['ts'] / 1000) + 3600
+            to += 600 - (to % 600)
         }
 
-        if (to === null) {
-            to = Math.trunc(devEvents[0]['ts'] / 1000) + 3599
+        if (from === null) {
+            from = Math.trunc(devEvents[0]['ts'] / 1000)
+            from = from -  (from % 600)
         }
+
+        const showDate = ((to - from) / (60 * 60)) >= 12
+        const intval = ((to - from) / length)
 
         return Array.from({ length: length }, (v, k) => {
-            const intval = ((to - from) / length)
+
             const cur = (from + (k * intval)) * 1000
             const prev = k > 0 ? (from + ((k - 1) * intval)) * 1000 : cur
             const next = (from + ((k + 1) * intval)) * 1000
 
             const itm = devEvents.filter((v) => v['ts'] >= cur && v['ts'] <= next)
             const skipVal = devEvents.filter((v) => v['ts'] < cur && v['ts'] >= prev)?.at(-1)
-            const ts = itm.length > 0 ? itm[0]['ts'] : cur
-            const val = itm.length > 0 ? itm[0]['v'] : skipVal ? skipVal['v'] : undefined
+            
+            let _itmIdx = 0
+            if (itm.length > 1) {
+                const _itmVal = itm.map((v, k)=>v['ts'] % 600000)
+                const _itmMin = Math.min(..._itmVal)
+                _itmIdx =  _itmVal.indexOf(_itmMin)
+            }
+
+
+            const ts = itm.length > 0 ?  itm[_itmIdx]['ts'] : cur
+            const val = itm.length > 0 ? itm[_itmIdx]['v'] : skipVal ? skipVal['v'] : undefined
+
+            let _ts = `${String(new Date(ts).getHours()).padStart(2, 0)}:${String(new Date(ts).getMinutes()).padStart(2, 0)}`;
+            if (showDate) {
+                _ts = `${String(new Date(ts).getDate()).padStart(2, 0)}.${String(new Date(ts).getMonth() + 1 ).padStart(2, 0)} ${_ts}`
+            }
 
             return {
-                ts: `${String(new Date(ts).getHours()).padStart(2, 0)}:${String(new Date(ts).getMinutes()).padStart(2, 0)}`,
+                ut: ts,
+                ts: _ts,
                 v: val ? (type.toLowerCase() === "float" ? this.toFloat(val) : type.toLowerCase() === "int" ? Number(val) : undefined) : val
             }
         })
     }
-
-
+    
 };
 
 export default ChartsBase;
